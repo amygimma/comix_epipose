@@ -15,7 +15,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 
 # Loads libraries and data
-source(file.path(here(), "r", "setup_report.R"))
+library(here)
+here::here()
+source(file.path(here::here(), "r", "setup_report.R"))
 
 ```
 
@@ -240,7 +242,7 @@ trunc_mean <- trunc_contacts %>%
 
 contact_mean_table <- rbindlist(list(all_mean, trunc_mean)) %>%
   rename(Wave = wave)
-tabl
+
 kable(contact_mean_table) %>%
   kable_styling(full_width = F, position = "left")
 ```

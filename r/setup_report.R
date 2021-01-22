@@ -1,7 +1,7 @@
 # Set country name and path to your local files
 
 country <- "Portugal"
-country_code <- "pt"
+country_code_ <- "pt"
 path_to_folder <- "data"
 
 library(here)
@@ -25,12 +25,14 @@ ggthemr::ggthemr("grape")
 # Read participants data ---------
 
 part <- qread(file.path(here::here(), path_to_folder, "participants.qs"))
-part %>% part %>% filter(country == country_code)
+part <- part %>% filter(country == country_code_)
+# table(part$country)
 
 # Read contacts data -----------
 
 contacts <- qread(file.path(here::here(), path_to_folder, "contacts.qs"))
-contacts %>% contacts %>% filter(country == country_code)
+contacts <- contacts %>% filter(country == country_code_)
+# table(contacts$country)
 
 
 # Read households data ----------
