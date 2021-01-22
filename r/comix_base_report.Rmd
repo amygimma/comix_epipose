@@ -13,41 +13,11 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(here)
-library(qs)
-library(dplyr)
-library(tidyr)
-library(forcats)
-library(knitr)
-library(kableExtra)
-library(data.table)
-library(ggplot2)
-library(ggthemr)
-library(cowplot)
-library(patchwork)
-# library(flextable)
-here::here()
-ggthemr::ggthemr("grape")
-source(file.path(here(), "r", "setup_file_paths.R"))
 
+# Loads libraries and data
+source(file.path(here(), "r", "setup_report.R"))
 
 ```
-```{r load_data, echo=FALSE}
-# read participants data
-
-part <- qread(file.path(here(), path_to_folder, "participants.qs"))
-
-# read contacts data
-
-contacts <- qread(file.path(here(), path_to_folder, "contacts.qs"))
-
-
-# read households data
-
-# hh <- file.path(path_to_folder, "households.rds")
-
-```
-
 
 
 ## Introduction
