@@ -24,9 +24,8 @@ source(file.path(here::here(), "r", "setup_report.R"))
 
 ## Introduction
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Participant demographics
 
 ```{r participant_table, echo=FALSE}
 part_summary_age <- part %>%
@@ -151,7 +150,7 @@ cnt_summary_setting <- contacts %>%
 # kable(cnt_summary_setting)  %>% kable_styling(full_width = F, position = "left")
 
 ```
-end
+
 
 ### Contact total time
 ```{r contact_duration, echo = FALSE, fig.width = 7, fig.height = 4}
@@ -209,16 +208,19 @@ cnt_summary_duration <- contacts %>%
 ```{r cnt_summary_table, echo = FALSE}
 cnt_summary_table <- rbindlist(list(cnt_summary_setting, cnt_summary_duration))
 
-cnt_summary_table
+kable(cnt_summary_table) %>% kable_styling(full_width = F, position = "left")
 ```
 
 
 ## Contact Means
 
-```{r contact_means, echo=FALSE}
+```{r contact_means, echo=FALSE, message = FALSE, warning = FALSE}
 setting_order <-  c("Home", "Work", "School", "Other")
 contacts <- contacts %>% 
   mutate(cnt_setting = fct_relevel(cnt_setting, setting_order))
+
+part_ages <- part %>% select(country, panel, wave, part_id, part_age_group)
+contacts <- left_join(contacts, part_ages, by = c("country", "panel", "wave", "part_id"))
 
 truncate_n <- 50
 trunc_contacts <- contacts %>%
@@ -230,25 +232,53 @@ all_mean <- contacts %>%
   count(wave, part_id) %>%
   group_by(wave) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "All") %>%
-  relocate(Contacts, before = "wave")
+  mutate(Contacts = "All", "Participant Age" = "All") 
+ 
 
 trunc_mean <- trunc_contacts %>% 
   count(wave, part_id) %>%
   group_by(wave) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "Truncated 50 / participant")  %>%
-  relocate(Contacts, before = "wave")
+   mutate(Contacts = "Truncated 50 / participant", "Participant Age" = "All") 
 
-contact_mean_table <- rbindlist(list(all_mean, trunc_mean)) %>%
-  rename(Wave = wave)
 
-kable(contact_mean_table) %>%
+
+all_mean_age <- contacts %>% 
+  count(wave, part_id, part_age_group) %>%
+  group_by(wave, part_age_group) %>%
+  summarise("Mean contacts" = mean(n)) %>%
+  mutate(Contacts = "All") %>% 
+  rename("Participant Age" = part_age_group)
+
+trunc_mean_age <- trunc_contacts %>% 
+  count(wave, part_id, part_age_group) %>%
+  group_by(wave, part_age_group) %>%
+  summarise("Mean contacts" = mean(n)) %>%
+  mutate(Contacts = "Truncated 50 / participant") %>% 
+  rename("Participant Age" = part_age_group) 
+
+contact_means <- rbindlist(list(all_mean, trunc_mean, all_mean_age, trunc_mean_age), use.names = T) %>%
+  rename(Wave = wave) %>%
+  mutate("Mean contacts"= round(`Mean contacts`, 2)) %>%
+  select("Wave", "Contacts", "Participant Age", "Mean contacts") 
+
+
+contact_means_table <- contact_means %>%
+  pivot_wider(id_cols = c("Contacts", "Participant Age"), names_from = "Wave", values_from = "Mean contacts", names_prefix = "Wave ")
+
+contact_means_ages <- contact_means %>% filter(`Participant Age` != "All")
+ggplot(contact_means_ages, aes(x = factor(Wave), y = `Mean contacts`, fill = `Participant Age`)) +
+  geom_col(position = "dodge") +
+  xlab("Wave") +
+  facet_grid(vars(Contacts)) +
+  theme_bw()
+
+kable(contact_means_table) %>%
   kable_styling(full_width = F, position = "left")
 ```
 
 
-## Contact Matrices
+<!-- ## Contact Matrices -->
 
 ```{r contact_matrices, echo=FALSE}
 # age_limits_ <- c(18, 30, 40, 50, 60, 70, 120)
