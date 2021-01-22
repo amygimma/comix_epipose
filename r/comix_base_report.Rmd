@@ -1,0 +1,303 @@
+---
+title: "CoMix base report"
+author: Amy Gimma, Christopher Jarvis, Kerry Wong, Kevin Van Zandvoort, CMMID, John
+  Edmunds
+date: "`r format(Sys.time(), '%A %d %B %Y')`"
+output:
+  # pdf_document: default
+  html_document: default
+  # word_document: default
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(qs)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(knitr)
+library(kableExtra)
+library(data.table)
+library(ggplot2)
+library(ggthemr)
+library(cowplot)
+library(patchwork)
+# library(flextable)
+here::here()
+ggthemr::ggthemr("grape")
+source(file.path(here(), "r", "setup_file_paths.R"))
+
+
+```
+```{r load_data, echo=FALSE}
+# read participants data
+
+part <- qread(file.path(here(), path_to_folder, "participants.qs"))
+
+# read contacts data
+
+contacts <- qread(file.path(here(), path_to_folder, "contacts.qs"))
+
+
+# read households data
+
+# hh <- file.path(path_to_folder, "households.rds")
+
+```
+
+
+
+## Introduction
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r participant_table, echo=FALSE}
+part_summary_age <- part %>%
+  count(wave, part_age_group) %>%
+  group_by(wave) %>%
+  mutate(prop = round(prop.table(n), 3)) %>%
+  mutate(display = paste(n, " (", (prop * 100), "%)", sep = ""))
+
+part_summary_gender <- part %>%
+  count(wave, part_gender) %>%
+  group_by(wave) %>%
+  mutate(prop = round(prop.table(n), 3)) %>%
+  mutate(display = paste(n, " (", (prop * 100), "%)", sep = ""))
+
+part_summary_hh_size <- part %>%
+  count(wave, hh_size) %>%
+  group_by(wave) %>%
+  mutate(prop = round(prop.table(n), 3)) %>%
+  mutate(display = paste(n, " (", (prop * 100), "%)", sep = ""))
+
+# part_summary_pop_dens <- part %>%
+#   count(wave, popul) %>%
+#   group_by(wave) %>%
+#   mutate(prop = round(prop.table(n), 3)) %>%
+#   mutate(display = paste(n, " (", (prop * 100), "%)", sep = ""))
+
+
+part_summary_display_age <- part_summary_age %>% 
+  pivot_wider(id_cols = "part_age_group", names_from = "wave", values_from = "display", names_prefix = "Wave ") %>% 
+  rename(Group = part_age_group) %>%
+  mutate(Category = "Age")
+
+part_summary_display_gender <- part_summary_gender %>%
+  pivot_wider(id_cols = "part_gender", names_from = "wave", values_from = "display", names_prefix = "Wave ") %>%
+  rename(Group = part_gender) %>%
+  mutate(Category = "Gender")
+
+part_summary_display_hh_size <- part_summary_hh_size %>% 
+  pivot_wider(id_cols = "hh_size", names_from = "wave", values_from = "display", names_prefix = "Wave ") %>% 
+  rename(Group = hh_size) %>%
+  mutate(Category = "Household size")
+
+
+all_summary <- part %>%
+  count(wave) %>% mutate(Category = "All") %>%
+  rename(display = n) %>%
+  pivot_wider(id_cols = "Category", names_from = "wave", values_from = "display", names_prefix = "Wave ")
+
+full_summary <- rbindlist(list(
+  all_summary,
+  part_summary_display_age,
+  part_summary_display_gender,
+  part_summary_display_hh_size), fill  = TRUE
+) %>% relocate(Group, .after = Category)
+kable(full_summary) %>% kable_styling(full_width = F, position = "left")
+
+# FOR WORD TABLES
+# theme_vanilla(flextable(full_summary))
+```
+
+## Contact summaries
+
+### Contact setting
+
+```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
+contacts <- contacts %>% mutate(cnt_setting := factor(case_when(
+  cnt_home == 1 ~ "Home", 
+  cnt_work == 1 ~ "Work", 
+  cnt_school == 1 ~ "School", 
+  cnt_other == 1 ~ "Other")
+  
+))
+
+setting_order <-  c("Home", "Work", "School", "Other")
+contacts <- contacts %>% 
+  mutate(cnt_setting = fct_relevel(cnt_setting, setting_order))
+
+setting_all <- ggplot(
+  contacts, 
+  aes(y = factor(wave), fill = factor(cnt_setting))) + 
+  geom_bar(position="fill", stat="count") +
+  ylab("Wave") +
+  xlab("Proportion") +
+  labs(fill = "Contact setting") +
+  coord_flip() +
+  # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
+  ggtitle("All contacts") +
+  theme_bw() +
+  theme(plot.title = element_text(size=12))
+
+# total_time_all
+
+
+setting_individual <- ggplot(
+  contacts %>% filter(cnt_mass == "individual"), 
+  aes(y = factor(wave), fill = factor(cnt_setting))) + 
+  geom_bar(position="fill", stat="count") +
+  ylab("Wave") +
+  xlab("Proportion") +
+  labs(fill = "Contact setting") +
+  coord_flip() +
+  ggtitle("Individually reported") +
+  theme_bw() +
+  theme(plot.title = element_text(size=12))
+
+# total_time_non_household 
+
+comb_setting <- (setting_all + setting_individual) + plot_layout(guides = "collect")
+comb_setting
+
+cnt_summary_setting <- contacts %>%
+  # filter(cnt_mass == "individual") %>%
+  count(wave, cnt_setting) %>%
+  group_by(wave) %>%
+  mutate(prop = round(prop.table(n), 3)) %>%
+  mutate(display = paste(n, " (", (prop * 100), "%)", sep = "")) %>%
+  pivot_wider(id_cols = "cnt_setting", names_from = "wave", values_from = "display", names_prefix = "Wave ")  %>%
+  rename("Group" = cnt_setting) %>%
+  mutate(Category = "Contact setting") %>%
+  relocate(Category, before = Group)
+
+# kable(cnt_summary_setting)  %>% kable_styling(full_width = F, position = "left")
+
+```
+end
+
+### Contact total time
+```{r contact_duration, echo = FALSE, fig.width = 7, fig.height = 4}
+
+total_time_all <- ggplot(
+  contacts %>% filter(cnt_mass == "individual"), 
+  aes(y = factor(wave), fill = factor(cnt_total_time))) + 
+  geom_bar(position="fill", stat="count") +
+  ylab("Wave") +
+  xlab("Proportion") +
+  labs(fill = "Contact time") +
+  coord_flip() +
+  # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
+  ggtitle("Individually reported contacts") +
+  theme_bw() +
+  theme(plot.title = element_text(size=12))
+
+# total_time_all
+
+
+total_time_non_household <- ggplot(
+  contacts %>% filter(cnt_mass == "individual" & cnt_household == 0), 
+  aes(y = factor(wave), fill = factor(cnt_total_time))) + 
+  geom_bar(position="fill", stat="count") +
+  ylab("Wave") +
+  xlab("Proportion") +
+  labs(fill = "Contact time") +
+  coord_flip() +
+  # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
+  ggtitle("Non-household contacts") +
+  theme_bw() +
+  theme(plot.title = element_text(size=12))
+
+# total_time_non_household 
+
+comb_total_time <- (total_time_all + total_time_non_household) + plot_layout(guides = "collect")
+
+comb_total_time 
+
+
+cnt_summary_duration <- contacts %>%
+  filter(cnt_mass == "individual") %>%
+  count(wave, cnt_total_time) %>%
+  group_by(wave) %>%
+  mutate(prop = round(prop.table(n), 3)) %>%
+  mutate(display = paste(n, " (", (prop * 100), "%)", sep = "")) %>%
+  pivot_wider(id_cols = "cnt_total_time", names_from = "wave", values_from = "display", names_prefix = "Wave ")  %>%
+  rename("Group" = cnt_total_time) %>%
+  mutate(Category = "Contact time") %>%
+  relocate(Category, before = Group)
+# kable(cnt_summary_duration)  %>% kable_styling(full_width = F, position = "left")
+
+```
+
+```{r cnt_summary_table, echo = FALSE}
+cnt_summary_table <- rbindlist(list(cnt_summary_setting, cnt_summary_duration))
+
+cnt_summary_table
+```
+
+
+## Contact Means
+
+```{r contact_means, echo=FALSE}
+setting_order <-  c("Home", "Work", "School", "Other")
+contacts <- contacts %>% 
+  mutate(cnt_setting = fct_relevel(cnt_setting, setting_order))
+
+truncate_n <- 50
+trunc_contacts <- contacts %>%
+  arrange(cnt_setting) %>% 
+  group_by(wave, part_id) %>% 
+  slice(1:truncate_n)
+
+all_mean <- contacts %>% 
+  count(wave, part_id) %>%
+  group_by(wave) %>%
+  summarise("Mean contacts" = mean(n)) %>%
+  mutate(Contacts = "All") %>%
+  relocate(Contacts, before = "wave")
+
+trunc_mean <- trunc_contacts %>% 
+  count(wave, part_id) %>%
+  group_by(wave) %>%
+  summarise("Mean contacts" = mean(n)) %>%
+  mutate(Contacts = "Truncated 50 / participant")  %>%
+  relocate(Contacts, before = "wave")
+
+contact_mean_table <- rbindlist(list(all_mean, trunc_mean)) %>%
+  rename(Wave = wave)
+tabl
+kable(contact_mean_table) %>%
+  kable_styling(full_width = F, position = "left")
+```
+
+
+## Contact Matrices
+
+```{r contact_matrices, echo=FALSE}
+# age_limits_ <- c(18, 30, 40, 50, 60, 70, 120)
+# pop_data <- qread(file.path(here(),"pop_data", "unwpp_data.qs"))
+# pop_data <- pop_data %>% filter(country == part$country & year == 2020)
+# 
+# age_limits <- seq(15, 100, 5)
+# c_cm <- contacts %>% 
+#   filter(cnt_mass == "individual" ) %>%
+#   select("part_id", "cont_id", "cnt_age_est_min","cnt_age_est_max", "cnt_gender",
+#          "cnt_home", "cnt_work", "cnt_school")
+# 
+# p_cm <- part %>% 
+#   select("part_id",  "part_age", "part_gender", "hh_size")
+         # "dayofweek")
+
+# c_cm %>% rename(cnt_age_exact cnt_age_est_min cnt_age_est_max)
+# comix_survey <- socialmixr::survey(part, c_cm)
+# comix_cm <- socialmixr::contact_matrix(comix_survey, 
+                                       # survey.pop = pop_data,
+                                       # age.limits = age_limits_,
+                                       # symmetric = T)
+
+```

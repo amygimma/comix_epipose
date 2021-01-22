@@ -1,9 +1,18 @@
+# Important!
+data/*
+*csv
+*.html
+*png
+*jpg
+*jpeg
+*qs
 # History files
 .Rhistory
 .Rapp.history
 
 # Session Data files
 .RData
+.DS_Store
 
 # User-specific files
 .Ruserdata
