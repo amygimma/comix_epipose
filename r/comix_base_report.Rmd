@@ -23,6 +23,18 @@ source(file.path(here::here(), "r", "setup_report.R"))
 
 
 ## Introduction
+#### This is a report from the Epipose social contacts survey for your country. Participants reported the total number of direct contacts that they had on the day before the survey, which are people with whom they had at least a brief face-to-face conversation, or with whom they had any sort of skin-to-skin contact. 
+
+## Timeline
+```{r timetable, echo=FALSE}
+
+timetable <- part %>% group_by(wave) %>% summarize(min=min(date), max=max(date))
+names(timetable) <- c("Wave","Start date","End date")
+##I want to transpose this so as we get more waves, the table grows horizontally not down...
+#timetable <- as_tibble(t(timetable), .rows = NULL)
+kable(timetable) %>% kable_styling(full_width = F, position = "left")
+
+```
 
 
 ## Participant demographics
@@ -87,6 +99,7 @@ kable(full_summary) %>% kable_styling(full_width = F, position = "left")
 ```
 
 ## Contact summaries
+#### Each contact was either individually enlisted (individually-reported contact) by the participants, or reported as part of a total number.
 
 ### Contact setting
 
@@ -112,9 +125,9 @@ setting_all <- ggplot(
   labs(fill = "Contact setting") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("All contacts") +
+  ggtitle("All contacts \n(individually-reported + \n aggregated") +
   theme_bw() +
-  theme(plot.title = element_text(size=12))
+  theme(plot.title = element_text(size=12)) 
 
 # total_time_all
 
@@ -127,13 +140,13 @@ setting_individual <- ggplot(
   xlab("Proportion") +
   labs(fill = "Contact setting") +
   coord_flip() +
-  ggtitle("Individually reported") +
+  ggtitle("All individually-reported contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
 # total_time_non_household 
 
-comb_setting <- (setting_all + setting_individual) + plot_layout(guides = "collect")
+comb_setting <- (setting_all + setting_individual) + plot_layout(guides = "collect") 
 comb_setting
 
 cnt_summary_setting <- contacts %>%
@@ -145,7 +158,7 @@ cnt_summary_setting <- contacts %>%
   pivot_wider(id_cols = "cnt_setting", names_from = "wave", values_from = "display", names_prefix = "Wave ")  %>%
   rename("Group" = cnt_setting) %>%
   mutate(Category = "Contact setting") %>%
-  relocate(Category, before = Group)
+  relocate(Category, .before = Group)
 
 # kable(cnt_summary_setting)  %>% kable_styling(full_width = F, position = "left")
 
@@ -164,7 +177,7 @@ total_time_all <- ggplot(
   labs(fill = "Contact time") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("Individually reported contacts") +
+  ggtitle("All individually- \nreported contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
@@ -180,7 +193,7 @@ total_time_non_household <- ggplot(
   labs(fill = "Contact time") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("Non-household contacts") +
+  ggtitle("All contacts in \nnon-household settings") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
@@ -200,7 +213,7 @@ cnt_summary_duration <- contacts %>%
   pivot_wider(id_cols = "cnt_total_time", names_from = "wave", values_from = "display", names_prefix = "Wave ")  %>%
   rename("Group" = cnt_total_time) %>%
   mutate(Category = "Contact time") %>%
-  relocate(Category, before = Group)
+  relocate(Category, .before = Group)
 # kable(cnt_summary_duration)  %>% kable_styling(full_width = F, position = "left")
 
 ```
@@ -208,11 +221,12 @@ cnt_summary_duration <- contacts %>%
 ```{r cnt_summary_table, echo = FALSE}
 cnt_summary_table <- rbindlist(list(cnt_summary_setting, cnt_summary_duration))
 
-kable(cnt_summary_table) %>% kable_styling(full_width = F, position = "left")
+kable(cnt_summary_table) %>% 
+  kable_styling(full_width = F, position = "left") 
 ```
 
 
-## Contact Means
+## Mean number of contacts
 
 ```{r contact_means, echo=FALSE, message = FALSE, warning = FALSE}
 setting_order <-  c("Home", "Work", "School", "Other")
@@ -232,14 +246,14 @@ all_mean <- contacts %>%
   count(wave, part_id) %>%
   group_by(wave) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "All", "Participant Age" = "All") 
+  mutate(Contacts = "All contacts", "Participant Age" = "All") 
  
 
 trunc_mean <- trunc_contacts %>% 
   count(wave, part_id) %>%
   group_by(wave) %>%
   summarise("Mean contacts" = mean(n)) %>%
-   mutate(Contacts = "Truncated 50 / participant", "Participant Age" = "All") 
+   mutate(Contacts = "Truncated to 50 contacts per participant", "Participant Age" = "All") 
 
 
 
@@ -247,14 +261,14 @@ all_mean_age <- contacts %>%
   count(wave, part_id, part_age_group) %>%
   group_by(wave, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "All") %>% 
+  mutate(Contacts = "All contacts") %>% 
   rename("Participant Age" = part_age_group)
 
 trunc_mean_age <- trunc_contacts %>% 
   count(wave, part_id, part_age_group) %>%
   group_by(wave, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "Truncated 50 / participant") %>% 
+  mutate(Contacts = "Truncated to 50 contacts per participant") %>% 
   rename("Participant Age" = part_age_group) 
 
 contact_means <- rbindlist(list(all_mean, trunc_mean, all_mean_age, trunc_mean_age), use.names = T) %>%
@@ -264,14 +278,18 @@ contact_means <- rbindlist(list(all_mean, trunc_mean, all_mean_age, trunc_mean_a
 
 
 contact_means_table <- contact_means %>%
-  pivot_wider(id_cols = c("Contacts", "Participant Age"), names_from = "Wave", values_from = "Mean contacts", names_prefix = "Wave ")
+  pivot_wider(id_cols = c("Contacts", "Participant Age"), 
+              names_from = "Wave", 
+              values_from = "Mean contacts", 
+              names_prefix = "Wave ")
 
 contact_means_ages <- contact_means %>% filter(`Participant Age` != "All")
 ggplot(contact_means_ages, aes(x = factor(Wave), y = `Mean contacts`, fill = `Participant Age`)) +
   geom_col(position = "dodge") +
   xlab("Wave") +
   facet_grid(vars(Contacts)) +
-  theme_bw()
+  theme_bw() +
+  ylab("Mean number of contacts")
 
 kable(contact_means_table) %>%
   kable_styling(full_width = F, position = "left")
