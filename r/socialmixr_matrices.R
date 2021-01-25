@@ -16,7 +16,7 @@ c_cm <- trunc_contacts %>%
 
 p_cm <- part %>%
   select("part_id", "part_wave_uid",  "part_age", "part_gender", "hh_size", "weekday") %>%
-  rename("day.of.week" = weekday)
+  rename("dayofweek" = weekday)
 # "dayofweek")
 
 bootstrap_n <- 250
@@ -33,7 +33,8 @@ comix_cm <- socialmixr::contact_matrix(comix_survey,
                                       )
 
 
-lapply
+
+
 
 Sys.Date() - t
 

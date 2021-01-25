@@ -9,6 +9,7 @@
 
 source(file.path("r", "setup_report.R"))
 
+
 sub_folder_name <- file.path("outputs", country_name_)
 dir.create(sub_folder_name, recursive = T, showWarnings = F)
 

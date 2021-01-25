@@ -2,8 +2,11 @@
 
 country_name_ <- "Portugal"
 path_to_data <- "data"
+<<<<<<< HEAD
 truncate_contacts_n <- 50
 matrix_boots_n <- 250
+=======
+>>>>>>> 6bf4956... smarter file reading
 
 library(here)
 library(qs)
@@ -41,6 +44,7 @@ part <- qread(file.path(here::here(), path_to_data, participants_file)) %>%
   mutate(part_age_group = ifelse(part_age_group == "70-120", "70+", part_age_group)) %>%
   mutate(country_name = map_eu_nations[country]) %>%
   filter(country_name == country_name_)
+<<<<<<< HEAD
 
 
 
@@ -72,6 +76,20 @@ contacts <- contacts %>%
 part_ages <- part %>% select(country, panel, wave, part_id, part_age_group)
 contacts <- left_join(contacts, part_ages,
                       by = c("country", "panel", "wave", "part_id"))
+=======
+
+
+
+# Read contacts data -----------
+contacts_file <- grep("contact", data_files, value = T)
+message(paste0("Reading from: ", contacts_file))
+
+contacts <- qread(file.path(here::here(), path_to_data, contacts_file)) %>%
+  mutate(country_name = map_eu_nations[country]) %>%
+  filter(country_name == country_name_)
+
+country_code_ <- unique(part$country)
+>>>>>>> 6bf4956... smarter file reading
 
 trunc_contacts <- contacts %>%
   arrange(cnt_setting) %>%
