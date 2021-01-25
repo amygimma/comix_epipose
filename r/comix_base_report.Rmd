@@ -140,17 +140,6 @@ kable(full_summary) %>% kable_styling(full_width = F, position = "left")
 ### Contact setting
 
 ```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
-contacts <- contacts %>% mutate(cnt_setting := factor(case_when(
-  cnt_home == 1 ~ "Home", 
-  cnt_work == 1 ~ "Work", 
-  cnt_school == 1 ~ "School", 
-  cnt_other == 1 ~ "Other")
-  
-))
-
-setting_order <-  c("Home", "Work", "School", "Other")
-contacts <- contacts %>% 
-  mutate(cnt_setting = fct_relevel(cnt_setting, setting_order))
 
 setting_all <- ggplot(
   contacts, 
@@ -265,18 +254,6 @@ kable(cnt_summary_table) %>%
 ## Mean number of contacts
 
 ```{r contact_means, echo=FALSE, message = FALSE, warning = FALSE}
-setting_order <-  c("Home", "Work", "School", "Other")
-contacts <- contacts %>% 
-  mutate(cnt_setting = fct_relevel(cnt_setting, setting_order))
-
-part_ages <- part %>% select(country, panel, wave, part_id, part_age_group)
-contacts <- left_join(contacts, part_ages, by = c("country", "panel", "wave", "part_id"))
-
-truncate_n <- 50
-trunc_contacts <- contacts %>%
-  arrange(cnt_setting) %>% 
-  group_by(wave, part_id) %>% 
-  slice(1:truncate_n)
 
 all_mean <- contacts %>% 
   count(wave, part_id) %>%
@@ -304,7 +281,7 @@ trunc_mean_age <- trunc_contacts %>%
   count(wave, part_id, part_age_group) %>%
   group_by(wave, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "Truncated to 50 contacts per participant") %>% 
+  mutate(Contacts = "Truncated to 50 contacts/participant") %>% 
   rename("Participant Age" = part_age_group) 
 
 contact_means <- rbindlist(list(all_mean, trunc_mean, all_mean_age, trunc_mean_age), use.names = T) %>%
@@ -319,11 +296,14 @@ contact_means_table <- contact_means %>%
               values_from = "Mean contacts", 
               names_prefix = "Wave ")
 
-contact_means_ages <- contact_means %>% filter(`Participant Age` != "All")
-ggplot(contact_means_ages, aes(x = factor(Wave), y = `Mean contacts`, fill = `Participant Age`)) +
+contact_means_ages <- contact_means %>% filter(`Participant Age` != "All") %>%
+  mutate(Wave = paste("Wave", Wave))
+
+ggplot(contact_means_ages, aes(x = `Participant Age`, y = `Mean contacts`,
+       fill = `Participant Age`)) +
   geom_col(position = "dodge") +
-  xlab("Wave") +
-  facet_grid(vars(Contacts)) +
+  xlab("Partcipant age") +
+  facet_grid(rows = vars(Contacts), cols = vars(factor(Wave))) +
   theme_bw() +
   ylab("Mean number of contacts")
 

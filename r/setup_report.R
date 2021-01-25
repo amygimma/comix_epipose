@@ -2,6 +2,8 @@
 
 country_name_ <- "Portugal"
 path_to_data <- "data"
+truncate_contacts_n <- 50
+matrix_boots_n <- 250
 
 library(here)
 library(qs)
@@ -52,5 +54,29 @@ contacts <- qread(file.path(here::here(), path_to_data, contacts_file)) %>%
 
 country_code_ <- unique(part$country)
 
+
+# Prepare data -------------
+
+contacts <- contacts %>% mutate(cnt_setting := factor(case_when(
+  cnt_home == 1 ~ "Home",
+  cnt_work == 1 ~ "Work",
+  cnt_school == 1 ~ "School",
+  cnt_other == 1 ~ "Other")
+
+))
+
+setting_order <-  c("Home", "Work", "School", "Other")
+contacts <- contacts %>%
+  mutate(cnt_setting = fct_relevel(cnt_setting, setting_order))
+
+part_ages <- part %>% select(country, panel, wave, part_id, part_age_group)
+contacts <- left_join(contacts, part_ages,
+                      by = c("country", "panel", "wave", "part_id"))
+
+trunc_contacts <- contacts %>%
+  arrange(cnt_setting) %>%
+  group_by(wave, part_id) %>%
+  slice(1:truncate_contacts_n) %>%
+  ungroup()
 
 
