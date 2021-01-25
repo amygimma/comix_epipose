@@ -1,7 +1,6 @@
 ---
 title: "CoMix base report"
-author: Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID, Christopher Jarvis, John
-  Edmunds
+author: Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID, Christopher Jarvis, John Edmunds
 date: "`r format(Sys.time(), '%A %d %B %Y')`"
 output:
   # pdf_document: default
