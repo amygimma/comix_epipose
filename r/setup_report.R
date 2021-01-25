@@ -1,7 +1,7 @@
 # Set country name and path to your local files
 
-country <- "Portugal"
-country_code_ <- "pt"
+country <- "Austria"
+country_code_ <- "at"
 path_to_folder <- "data"
 
 library(here)
@@ -24,7 +24,7 @@ ggthemr::ggthemr("grape")
 
 # Read participants data ---------
 
-part <- qread(file.path(here::here(), path_to_folder, "participants.qs"))
+part <- qread(file.path(here::here(), path_to_folder, paste0(country_code_, "_participants.qs")))
 table(part$part_age_group)
 part <- part %>% filter(country == country_code_) %>%
   mutate(part_age_group = ifelse(part_age_group == "70-120", "70+", part_age_group))
@@ -34,7 +34,7 @@ table(part$country, part$wave)
 
 # Read contacts data -----------
 
-contacts <- qread(file.path(here::here(), path_to_folder, "contacts.qs"))
+contacts <- qread(file.path(here::here(), path_to_folder, paste0(country_code_, "_contacts.qs")))
 contacts <- contacts %>% filter(country == country_code_)
 table(contacts$country, contacts$wave)
 
