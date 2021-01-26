@@ -54,7 +54,7 @@ We calculated the mean contacts for the contact matrices by using the socialmixr
 
 ### Timeline
 
-There have been `r length(unique(part$wave))` waves of the survey covering from the period `r min(part$date)` to `r max(part$date)`
+The CoMix survey in `r country_name_` has had `r length(unique(part$wave))` waves of data collection covering from the period `r format(min(part$survey_date), "%d of %B %Y")` to `r format(max(part$surey_date), "%d of %B %Y")`. Figure 1 shows survey response by date.
 
 ```{r timetable, fig.cap="Table 1: Timeline of survey rounds"}
 
@@ -70,16 +70,13 @@ kable(t(timetable)) %>% kable_styling(full_width = F, position = "left")
 
 ```
 
-
-Each wave can take place over different time periods. The number of reponses by day of contacts (24 hours prior to the survey) are shown in Figure 1 for each survey wave. 
-
 ```{r response_day_participants, fig.cap="Figure 1: Survey responses by date", fig.height= 4, fig.width= 6}
 
 obs_per_date <- part %>% 
-  count(wave, date)
+  count(wave, survey_date)
 
 ggplot(obs_per_date) +
-  geom_col(aes(y = n, x = date)) +
+  geom_col(aes(y = n, x = survey_date)) +
   facet_wrap(. ~ wave, scales = "free_x") +
   scale_x_date(breaks = "2 day", expand = expansion(0)) +
   scale_y_continuous(expand = expansion(0)) +
