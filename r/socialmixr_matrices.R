@@ -11,7 +11,7 @@ age_map <- age_labels
 names(age_map) <- age_levs
 
 # Note: Population data is from 2015, will update with newer pop estimates
-pop_data <- socialmixr::wpp_age(countries = c(country_name_), years = c(2020))
+pop_data <- socialmixr::wpp_age(countries = c(country_name_), years = c(2015))
 
 cnt_sm <- trunc_contacts %>%
   select("country", "wave", "part_id", "part_wave_uid", "cnt_age_est_min",

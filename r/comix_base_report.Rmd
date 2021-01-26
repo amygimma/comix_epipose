@@ -1,7 +1,13 @@
 ---
-title: "CoMix social survey country report"
-author: Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID, Christopher Jarvis, John Edmunds
+title: "CoMix social contact survey country report"
+author: Amy Gimma, Kerry Wong, Kevin Van Zandvoort, LSHTM CMMID, Christopher Jarvis, John Edmunds
 date: "`r format(Sys.time(), '%A %d %B %Y')`"
+params:
+  preset_variables: FALSE
+  country_name_: NULL
+  path_to_data: NULL
+  truncate_contacts_n: NULL
+  matrix_boots_n: NULL
 output:
   # pdf_document: default
   html_document: default
@@ -11,29 +17,49 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, error = FALSE, warning = FALSE, message = FALSE )
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE )
 
+message("PARAMS", params$country_name_)
 # Loads libraries and data
 library(here)
 here::here()
+
+# Read params, if set (no aftion if not)
+if (!is.null(params$preset_variables)) {
+  preset_variables <- params$preset_variables
+}
+if (!is.null(params$country_name_)) country_name_ <- params$country_name_
+if (!is.null(params$path_to_data)) path_to_data <- params$path_to_data
+if (!is.null(params$truncate_contacts_n)) {
+  truncate_contacts_n <- params$truncate_contacts_n
+}
+if (!is.null(params$matrix_boots_n)) matrix_boots_n <- params$matrix_boots_n
+
 source(file.path(here::here(), "r", "setup_report.R"))
 
 ```
 
-## `r country_name_`
+## Country: `r country_name_`
 
-## Introduction
+## Introduction & Methods
 
-This is a report from the Epipose social contacts survey for your country. Participants reported the total number of direct contacts that they had on the day before the survey, which are people with whom they had at least a brief face-to-face conversation, or with whom they had any sort of skin-to-skin contact. 
+CoMix is a behavioural survey, first launched on 24th of March 2020 in the UK, and launched in `r country_name_` on `r format(min(part$survey_date), "%d of %B %Y")`. The sample is broadly representative of the adult population in `r country_name_`. Participant’s are invited to respond to the survey approximately once every two weeks. In two waves, parents will complete the survey on behalf of a child in their household (17 years old or younger). Participants record direct, face-to-face contacts made on the previous day, specifying certain characteristics for each contact including the age and sex of the contact, whether contact was physical (skin-to-skin contact), and where contact occurred (e.g. at home, work, while undertaking leisure activities, etc). Further details have been published elsewhere[1]. The contact survey is based on the POLYMOD contact survey[2]. 
 
-## Timeline
+We calculated the crude mean number of contacts in the settings home, work and school (including all educational establishments, including childcare, nurseries and universities and colleges), and “other”  (mostly leisure and social contacts, but includes shopping). We look at the mean contacts by age and survey wave. The mean number of contacts is influenced by a few individuals who report very high numbers of contacts (often in a work context). We show means for all contacts and means calculated based on truncating the maximum number of contacts recorded at 50 per individual per day.
+
+We calculated the mean contacts for the contact matrices by using the socialmixr R package [3], using `r matrix_boots_n` bootstrap samples. We constructed age-stratified contact matrices for nine age-groups (0-4, 5-11, 12-17, 18-29, 30-39, 40-49, 50-59, 60-69, and 70+). For children participants and contacts, we did not have exact ages and therefore sampled from the reported age-group uniformly. We fitted a truncated negative binomial model to calculate the mean contacts between each participant and contact age-groups. To find the population normalised symmetrical contact matrix, we multiplied the columns of the matrix by the mean-normalised proportion of the UK population in each age-group. 
+
+ 
+## Results
+
+### Timeline
 
 There have been `r length(unique(part$wave))` waves of the survey covering from the period `r min(part$date)` to `r max(part$date)`
 
 ```{r timetable, fig.cap="Table 1: Timeline of survey rounds"}
 
-timetable <- part %>% group_by(wave) %>% summarize(min_date = min(date), max_date = max(date), participants = n())
-
+timetable <- part %>% group_by(wave) %>% summarize(min_date = min(date), max_date = max(date), participants = n()) %>% ungroup()
+# contacts <- contacts %>% ungroup()
 count_contacts <- contacts %>% count(wave, name = "contacts")
 
 timetable <- left_join(timetable, count_contacts)
@@ -65,7 +91,7 @@ ggplot(obs_per_date) +
 
 
 
-## Participant demographics
+### Participant demographics
 
 ```{r participant_table, echo=FALSE}
 part_summary_age <- part %>%
@@ -135,10 +161,10 @@ kable(full_summary) %>% kable_styling(full_width = F, position = "left")
 # theme_vanilla(flextable(full_summary))
 ```
 
-## Contact summaries
-#### Each contact was either individually enlisted (individually-reported contact) by the participants, or reported as part of a total number.
+### Contact summaries
 
-### Contact setting
+
+#### Contact setting
 
 ```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
 
@@ -191,7 +217,7 @@ cnt_summary_setting <- contacts %>%
 ```
 
 
-### Contact total time
+#### Contact total time
 ```{r contact_duration, echo = FALSE, fig.width = 7, fig.height = 4}
 
 total_time_all <- ggplot(
@@ -252,7 +278,7 @@ kable(cnt_summary_table) %>%
 ```
 
 
-## Mean number of contacts
+#### Mean number of contacts
 
 Crude mean contacts by participant age group for each wave.
 
@@ -315,7 +341,7 @@ kable(contact_means_table) %>%
 ```
 
 
-## Contact Matrices
+### Contact Matrices
 
 Contact matrices are generated using the [socialmixr](https://github.com/sbfnk/socialmixr) R package. 
 
@@ -330,6 +356,9 @@ cm_plot
 ```
 
 
-### References
+#### References
 
-Sebastian Funk (2020). socialmixr: Social Mixing Matrices for Infectious Disease Modelling. R package version 0.1.7.
+1. 	Jarvis CI, Van Zandvoort K, Gimma A, Prem K, CMMID COVID-19 working group, Klepac P, et al. Quantifying the impact of physical distance measures on the transmission of COVID-19 in the UK. BMC Med. 2020;18: 124.
+2. 	Mossong J, Hens N, Jit M, Beutels P, Auranen K, Mikolajczyk R, et al. Social contacts and mixing patterns relevant to the spread of infectious diseases. PLoS Med. 2008;5: e74. 
+
+3. Sebastian Funk (2020). socialmixr: Social Mixing Matrices for Infectious Disease Modelling. R package version 0.1.7.

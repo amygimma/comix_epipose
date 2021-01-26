@@ -1,9 +1,23 @@
-# Set country name and path to your local files
+# Sets variables, reads, & cleans data for both local environment and rmarkdown rendering
 
-country_name_ <- "Denmark"
-path_to_data <- "data"
-truncate_contacts_n <- 50
-matrix_boots_n <- 250
+# Instructions: -----
+  # If running with Knit button: Set country name andother variables below
+  # If running with run_all.R script: Set country name and other variables
+    # in `r/00_run_all.R` file (and ignore variables below)
+
+
+
+# Important: Do not change preset_variables code -----
+if (!exists("preset_variables")) preset_variables <- FALSE
+
+if (preset_variables == FALSE) {
+  message("Setting data from r/setup_report.R")
+  country_name_ <- "Denmark"
+  path_to_data <- "data"
+  truncate_contacts_n <- 50
+  matrix_boots_n <- 250
+}
+
 
 library(here)
 library(qs)
