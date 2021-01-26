@@ -321,7 +321,7 @@ kable(cnt_summary_table) %>%
 
 <br/>
 
-<strong>Figure 4. Crude mean contacts by participant age group for each wave.</strong>
+<strong>Figure 4. Crude mean contacts by participant age group and wave.</strong>   Reported by all contacts and contacts truncated to 50 per participant per day.
 
 ```{r contact_means_plot, echo=FALSE, message = FALSE, warning = FALSE}
 
