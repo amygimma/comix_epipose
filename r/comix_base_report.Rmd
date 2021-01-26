@@ -253,6 +253,8 @@ kable(cnt_summary_table) %>%
 
 ## Mean number of contacts
 
+Crude mean contacts by participant age group for each wave.
+
 ```{r contact_means, echo=FALSE, message = FALSE, warning = FALSE}
 
 all_mean <- contacts %>% 
@@ -312,28 +314,21 @@ kable(contact_means_table) %>%
 ```
 
 
-<!-- ## Contact Matrices -->
+## Contact Matrices
+
+Contact matrices are generated using the [socialmixr](https://github.com/sbfnk/socialmixr) R package. 
+
+Contacts are sampled from within age groups weighted using the UN World Population Prospects estimates from 2015, the latest data available within the socialmixr package.
+
 
 ```{r contact_matrices, echo=FALSE}
-# age_limits_ <- c(18, 30, 40, 50, 60, 70, 120)
-# pop_data <- qread(file.path(here(),"pop_data", "unwpp_data.qs"))
-# pop_data <- pop_data %>% filter(country == part$country & year == 2020)
-# 
-# age_limits <- seq(15, 100, 5)
-# c_cm <- contacts %>% 
-#   filter(cnt_mass == "individual" ) %>%
-#   select("part_id", "cont_id", "cnt_age_est_min","cnt_age_est_max", "cnt_gender",
-#          "cnt_home", "cnt_work", "cnt_school")
-# 
-# p_cm <- part %>% 
-#   select("part_id",  "part_age", "part_gender", "hh_size")
-         # "dayofweek")
+# Plot generated in `r/socialmixr_matrices.R`
+source(file.path(here::here(), "r", "socialmixr_matrices.R"))
 
-# c_cm %>% rename(cnt_age_exact cnt_age_est_min cnt_age_est_max)
-# comix_survey <- socialmixr::survey(part, c_cm)
-# comix_cm <- socialmixr::contact_matrix(comix_survey, 
-                                       # survey.pop = pop_data,
-                                       # age.limits = age_limits_,
-                                       # symmetric = T)
-
+cm_plot
 ```
+
+
+### References
+
+Sebastian Funk (2020). socialmixr: Social Mixing Matrices for Infectious Disease Modelling. R package version 0.1.7.
