@@ -385,7 +385,7 @@ kable(contact_means_table) %>%
 
 <br/>
 
-<strong>Figure 5. Contact matrices by wave.</strong>
+<strong>Figure 5. Contact matrices by wave.</strong> Contacts truncated to 50 per participant per day.
 
 ```{r contact_matrices, echo=FALSE}
 # Plot generated in `r/socialmixr_matrices.R`
