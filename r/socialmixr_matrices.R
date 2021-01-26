@@ -42,6 +42,7 @@ for(wave_ in unique(part$wave)) {
                                                 weigh.dayofweek = T,
                                                 estimated.contact.age = "sample"
   )
+
   reduced_cm <- Reduce("+", lapply(comix_cm_output$matrices,
                                    function(x) {x$matrix})) / length(comix_cm_output$matrices)
   cm_df <- melt(reduced_cm, varnames = c("age1", "age2"), value.name = "contacts")

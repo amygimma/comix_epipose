@@ -5,10 +5,11 @@
 # If running with Knit button: Set country name and other variables in `r/00_run_all.R` file
 
 preset_variables <- TRUE
-countries <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
 
+# Group 1 countries
+# countries <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
 # Sample for single country
-# countries <- c("Poland")
+countries <- "Poland"
 
 path_to_data <- "data"
 truncate_contacts_n <- 50
