@@ -54,7 +54,7 @@ We calculated the mean contacts for the contact matrices by using the socialmixr
 
 ### Timeline
 
-The CoMix survey in `r country_name_` has had `r length(unique(part$wave))` waves of data collection covering from the period `r format(min(part$survey_date), "%d of %B %Y")` to `r format(max(part$surey_date), "%d of %B %Y")`. Figure 1 shows survey response by date.
+The CoMix survey in `r country_name_` has had `r length(unique(part$wave))` waves of data collection covering from the period `r format(min(part$survey_date), "%d of %B %Y")` to `r format(max(part$survey_date), "%d of %B %Y")`. Figure 1 shows survey response by date.
 
 ```{r timetable, fig.cap="Table 1: Timeline of survey rounds"}
 
@@ -69,8 +69,12 @@ names(timetable) <- c("Wave","Start date","End date", "Participants", "Contacts"
 kable(t(timetable)) %>% kable_styling(full_width = F, position = "left")
 
 ```
+<strong>Table 1. Survey wave summary.</strong> Survey wave start and end dates, number of participants, and number of contacts.
 
-```{r response_day_participants, fig.cap="Figure 1: Survey responses by date", fig.height= 4, fig.width= 6}
+
+<strong>Figure 1: Survey responses by date</strong>
+
+```{r response_day_participants, fig.height=4, fig.width=6}
 
 obs_per_date <- part %>% 
   count(wave, survey_date)
@@ -89,6 +93,7 @@ ggplot(obs_per_date) +
 
 
 ### Participant demographics
+
 
 ```{r participant_table, echo=FALSE}
 part_summary_age <- part %>%
@@ -158,10 +163,14 @@ kable(full_summary) %>% kable_styling(full_width = F, position = "left")
 # theme_vanilla(flextable(full_summary))
 ```
 
+<strong>Table 2. Participant demographics by wave for age, gender, and household size.</strong>
+
 ### Contact summaries
 
 
 #### Contact setting
+
+<strong>Figure 2. Proportion of contacts by setting and wave.</strong>
 
 ```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
 
@@ -199,7 +208,6 @@ comb_setting <- (setting_all + setting_individual) + plot_layout(guides = "colle
 comb_setting
 
 cnt_summary_setting <- contacts %>%
-  # filter(cnt_mass == "individual") %>%
   count(wave, cnt_setting) %>%
   group_by(wave) %>%
   mutate(prop = round(prop.table(n), 3)) %>%
@@ -214,7 +222,10 @@ cnt_summary_setting <- contacts %>%
 ```
 
 
-#### Contact total time
+#### Contact duration
+
+<strong>Figure 3. Proportion of contacts by duration of contact and wave.</strong>
+
 ```{r contact_duration, echo = FALSE, fig.width = 7, fig.height = 4}
 
 total_time_all <- ggplot(
@@ -274,10 +285,11 @@ kable(cnt_summary_table) %>%
   kable_styling(full_width = F, position = "left") 
 ```
 
+<strong>Table 3. Proportion of contacts by setting and duration of contact and wave.</strong>
 
 #### Mean number of contacts
 
-Crude mean contacts by participant age group for each wave.
+<strong>Figure 4. Crude mean contacts by participant age group for each wave.</strong>
 
 ```{r contact_means, echo=FALSE, message = FALSE, warning = FALSE}
 
@@ -336,14 +348,11 @@ ggplot(contact_means_ages, aes(x = `Participant Age`, y = `Mean contacts`,
 kable(contact_means_table) %>%
   kable_styling(full_width = F, position = "left")
 ```
-
+<strong>Table 4. Crude mean contacts by participant age group for each wave.</strong>
 
 ### Contact Matrices
 
-Contact matrices are generated using the [socialmixr](https://github.com/sbfnk/socialmixr) R package. 
-
-Contacts are sampled from within age groups weighted using the UN World Population Prospects estimates from 2015, the latest data available within the socialmixr package. 
-
+<strong>Figure 5. Contact matrices by wave.</strong>
 
 ```{r contact_matrices, echo=FALSE}
 # Plot generated in `r/socialmixr_matrices.R`
