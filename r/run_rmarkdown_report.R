@@ -2,7 +2,7 @@
 # Instructions:
 # 1. Create a "data" folder and save contact and participant qs files to this folder
 # 2. Set up the report in the file `r/setup_report.R`
-# 3. Run this from the project folder by running
+# 3. Run this file from the project folder by running
 #    `Rscript "r/run_markdown_report.R"` in the R console.
 # 4. Outputs will be saved to a directory called `outputs` and in a sub-directory
 #     of the country's name (for example, `outputs/Portugal`)
