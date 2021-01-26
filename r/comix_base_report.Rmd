@@ -1,7 +1,4 @@
 ---
-title: "CoMix social contact survey country report"
-author: Amy Gimma, Kerry Wong, Kevin Van Zandvoort, LSHTM CMMID, Christopher Jarvis, John Edmunds
-date: "`r format(Sys.time(), '%A %d %B %Y')`"
 params:
   preset_variables: FALSE
   country_name_: NULL
@@ -9,11 +6,14 @@ params:
   truncate_contacts_n: NULL
   matrix_boots_n: NULL
 output:
-  # pdf_document: default
   html_document: default
-  # word_document: default
 ---
 
+<style>
+    body .main-container {
+        width: 775px;
+    }
+</style>
 
 
 ```{r setup, include=FALSE}
@@ -38,11 +38,14 @@ if (!is.null(params$matrix_boots_n)) matrix_boots_n <- params$matrix_boots_n
 source(file.path(here::here(), "r", "setup_report.R"))
 
 ```
-<br/>
 
-## `r country_name_`
+# CoMix social contact survey
 
-<br/>
+### Country report for `r country_name_`
+
+*Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID COVID-19 Working Group, London School of Hygiene and Tropical Medicine, Christopher Jarvis, John Edmunds*
+
+`r format(Sys.time(), '%A, %d %B %Y')`
 
 ## Introduction & Methods
 
