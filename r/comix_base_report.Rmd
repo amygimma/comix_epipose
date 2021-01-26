@@ -47,7 +47,7 @@ source(file.path(here::here(), "r", "setup_report.R"))
 
 `r format(Sys.time(), '%A, %d %B %Y')`
 
-## Introduction & Methods
+### Introduction & Methods
 
 <br/>
 
