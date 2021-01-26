@@ -1,6 +1,6 @@
 # Set country name and path to your local files
 
-country_name_ <- "Portugal"
+country_name_ <- "Denmark"
 path_to_data <- "data"
 truncate_contacts_n <- 50
 matrix_boots_n <- 250
