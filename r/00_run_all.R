@@ -7,7 +7,9 @@
 preset_variables <- TRUE
 countries <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
 
-countries <- c("Italy", "Poland", "Portugal")
+# Sample for single country
+# countries <- c("Poland")
+
 path_to_data <- "data"
 truncate_contacts_n <- 50
 matrix_boots_n <- 250

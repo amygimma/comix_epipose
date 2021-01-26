@@ -185,7 +185,7 @@ kable(full_summary) %>% kable_styling(full_width = F, position = "left")
 
 <br/>
 
-### Contact summaries
+### Contact characteristics
 
 <br/>
 
@@ -323,7 +323,7 @@ kable(cnt_summary_table) %>%
 
 <strong>Figure 4. Crude mean contacts by participant age group for each wave.</strong>
 
-```{r contact_means, echo=FALSE, message = FALSE, warning = FALSE}
+```{r contact_means_plot, echo=FALSE, message = FALSE, warning = FALSE}
 
 all_mean <- contacts %>% 
   count(wave, part_id) %>%
@@ -376,7 +376,11 @@ ggplot(contact_means_ages, aes(x = `Participant age`, y = `Mean contacts`,
   facet_grid(rows = vars(Contacts), cols = vars(factor(Wave))) +
   theme_bw() +
   ylab("Mean number of contacts")
+```
 
+<br/>
+
+```{r contact_means_table}
 kable(contact_means_table) %>%
   kable_styling(full_width = F, position = "left")
 ```
