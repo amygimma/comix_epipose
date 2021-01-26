@@ -38,19 +38,27 @@ if (!is.null(params$matrix_boots_n)) matrix_boots_n <- params$matrix_boots_n
 source(file.path(here::here(), "r", "setup_report.R"))
 
 ```
+<br/>
 
-## Country: `r country_name_`
+## `r country_name_`
+
+<br/>
 
 ## Introduction & Methods
 
+<br/>
+
 CoMix is a behavioural survey, first launched on 24th of March 2020 in the UK, and launched in `r country_name_` on `r format(min(part$survey_date), "%d of %B %Y")`. The sample is broadly representative of the adult population in `r country_name_`. Participant’s are invited to respond to the survey approximately once every two weeks. In two waves, parents will complete the survey on behalf of a child in their household (17 years old or younger). Participants record direct, face-to-face contacts made on the previous day, specifying certain characteristics for each contact including the age and sex of the contact, whether contact was physical (skin-to-skin contact), and where contact occurred (e.g. at home, work, while undertaking leisure activities, etc). Participants are instructed to report contacts individually, but are also given the opportunity to report aggregated estimates of contacts by age group and setting in case they did not list all contacts individually. Further details have been published elsewhere[1,2]. The contact survey is based on the POLYMOD contact survey[3]. 
 
-We calculated and plotted the crude mean number of contacts by setting, duration, and participant to contact age groups. We used the settings home, work and school (including all educational establishments, including childcare, nurseries and universities and colleges), and “other”  (mostly leisure and social contacts, but includes shopping). We look at the mean contacts by age and survey wave. The mean number of contacts is influenced by a few individuals who report very high numbers of contacts (often in a work context). We show means for all contacts and means calculated based on truncating the maximum number of contacts recorded at 50 per individual per day.
+We calculated and plotted the crude mean number of contacts by setting, duration, and participant to contact age groups. We used the settings home, work and school (including all educational establishments, including childcare, nurseries and universities and colleges), and “other”  (mostly leisure and social contacts, but includes shopping), and report . We look at the mean contacts by age and survey wave. The mean number of contacts is influenced by a few individuals who report very high numbers of contacts (often in a work context). We show means for all contacts and means number of contacts after truncating the maximum number of contacts recorded at 50 per individual per day.
 
 We calculated the mean contacts for the contact matrices by using the socialmixr R package [4], with `r matrix_boots_n` bootstrapped samples. We used the World Population Prospect data from 2015 for country specific population estimates  by age and gender, which is the latest available data in the socialmixr package. We constructed age-stratified contact matrices for nine age-groups (0-4, 5-11, 12-17, 18-29, 30-39, 40-49, 50-59, 60-69, and 70+). For contacts, we do not have exact ages and therefore sampled from the reported age-group.
 
+ <br/>
  
 ## Results
+
+<br/>
 
 ### Timeline
 
@@ -71,29 +79,36 @@ kable(t(timetable)) %>% kable_styling(full_width = F, position = "left")
 ```
 <strong>Table 1. Survey wave summary.</strong> Survey wave start and end dates, number of participants, and number of contacts.
 
+<br/>
 
-<strong>Figure 1: Survey responses by date</strong>
+<strong>Figure 1: Survey responses by date.</strong>
 
 ```{r response_day_participants, fig.height=4, fig.width=6}
 
 obs_per_date <- part %>% 
-  count(wave, survey_date)
+  count(wave, survey_date) %>%
+  mutate(survey_date)
 
 ggplot(obs_per_date) +
   geom_col(aes(y = n, x = survey_date)) +
-  facet_wrap(. ~ wave, scales = "free_x") +
-  scale_x_date(breaks = "2 day", expand = expansion(0)) +
-  scale_y_continuous(expand = expansion(0)) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.3)) +
-  labs(y = "Number of participants", x = "Date of contact")
+  facet_grid(. ~ wave, scales = "free_x", space = "free_x") +
+  scale_x_date(breaks = "2 day", 
+               expand = expansion(0), 
+               date_labels = "%d %b %y") +
+  labs(y = "Number of participants", x = "Date of contact") + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3)) 
+
 
 
 ```
 
 
+<br/>
 
 ### Participant demographics
 
+<br/>
 
 ```{r participant_table, echo=FALSE}
 part_summary_age <- part %>%
@@ -165,12 +180,17 @@ kable(full_summary) %>% kable_styling(full_width = F, position = "left")
 
 <strong>Table 2. Participant demographics by wave for age, gender, and household size.</strong>
 
+<br/>
+
 ### Contact summaries
 
+<br/>
 
 #### Contact setting
 
-<strong>Figure 2. Proportion of contacts by setting and wave.</strong>
+<br/>
+
+<strong>Figure 2. Proportion of contacts by setting and wave for all contacts (individually reported and aggregated) and for individually-reported contacts only.</strong>
 
 ```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
 
@@ -183,7 +203,7 @@ setting_all <- ggplot(
   labs(fill = "Contact setting") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("All contacts \n(individually-reported + \n aggregated") +
+  ggtitle("All contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12)) 
 
@@ -198,7 +218,7 @@ setting_individual <- ggplot(
   xlab("Proportion") +
   labs(fill = "Contact setting") +
   coord_flip() +
-  ggtitle("All individually-reported contacts") +
+  ggtitle("Individually-reported contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
@@ -221,8 +241,11 @@ cnt_summary_setting <- contacts %>%
 
 ```
 
+<br/>
 
 #### Contact duration
+
+<br/>
 
 <strong>Figure 3. Proportion of contacts by duration of contact and wave.</strong>
 
@@ -237,7 +260,7 @@ total_time_all <- ggplot(
   labs(fill = "Contact time") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("All individually- \nreported contacts") +
+  ggtitle("Individually-reported contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
@@ -253,7 +276,7 @@ total_time_non_household <- ggplot(
   labs(fill = "Contact time") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("All contacts in \nnon-household settings") +
+  ggtitle("Individually-reported contacts\n\nin non-household settings") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
@@ -278,6 +301,8 @@ cnt_summary_duration <- contacts %>%
 
 ```
 
+<br/>
+
 ```{r cnt_summary_table, echo = FALSE}
 cnt_summary_table <- rbindlist(list(cnt_summary_setting, cnt_summary_duration))
 
@@ -285,9 +310,13 @@ kable(cnt_summary_table) %>%
   kable_styling(full_width = F, position = "left") 
 ```
 
-<strong>Table 3. Proportion of contacts by setting and duration of contact and wave.</strong>
+<strong>Table 3. Proportion of contacts by setting and duration of contact and wave, with all contacts included.</strong>
 
-#### Mean number of contacts
+<br/>
+
+#### Contact means
+
+<br/>
 
 <strong>Figure 4. Crude mean contacts by participant age group for each wave.</strong>
 
@@ -297,14 +326,14 @@ all_mean <- contacts %>%
   count(wave, part_id) %>%
   group_by(wave) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "All contacts", "Participant Age" = "All") 
+  mutate(Contacts = "All contacts", "Participant age" = "All") 
  
 
 trunc_mean <- trunc_contacts %>% 
   count(wave, part_id) %>%
   group_by(wave) %>%
   summarise("Mean contacts" = mean(n)) %>%
-   mutate(Contacts = "Truncated to 50 contacts per participant", "Participant Age" = "All") 
+   mutate(Contacts = "Truncated to 50 contacts per participant", "Participant age" = "All") 
 
 
 
@@ -313,32 +342,32 @@ all_mean_age <- contacts %>%
   group_by(wave, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
   mutate(Contacts = "All contacts") %>% 
-  rename("Participant Age" = part_age_group)
+  rename("Participant age" = part_age_group)
 
 trunc_mean_age <- trunc_contacts %>% 
   count(wave, part_id, part_age_group) %>%
   group_by(wave, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
   mutate(Contacts = "Truncated to 50 contacts/participant") %>% 
-  rename("Participant Age" = part_age_group) 
+  rename("Participant age" = part_age_group) 
 
 contact_means <- rbindlist(list(all_mean, trunc_mean, all_mean_age, trunc_mean_age), use.names = T) %>%
   rename(Wave = wave) %>%
   mutate("Mean contacts"= round(`Mean contacts`, 2)) %>%
-  select("Wave", "Contacts", "Participant Age", "Mean contacts") 
+  select("Wave", "Contacts", "Participant age", "Mean contacts") 
 
 
 contact_means_table <- contact_means %>%
-  pivot_wider(id_cols = c("Contacts", "Participant Age"), 
+  pivot_wider(id_cols = c("Contacts", "Participant age"), 
               names_from = "Wave", 
               values_from = "Mean contacts", 
               names_prefix = "Wave ")
 
-contact_means_ages <- contact_means %>% filter(`Participant Age` != "All") %>%
+contact_means_ages <- contact_means %>% filter(`Participant age` != "All") %>%
   mutate(Wave = paste("Wave", Wave))
 
-ggplot(contact_means_ages, aes(x = `Participant Age`, y = `Mean contacts`,
-       fill = `Participant Age`)) +
+ggplot(contact_means_ages, aes(x = `Participant age`, y = `Mean contacts`,
+       fill = `Participant age`)) +
   geom_col(position = "dodge") +
   xlab("Partcipant age") +
   facet_grid(rows = vars(Contacts), cols = vars(factor(Wave))) +
@@ -350,7 +379,11 @@ kable(contact_means_table) %>%
 ```
 <strong>Table 4. Crude mean contacts by participant age group for each wave.</strong>
 
+<br/>
+
 ### Contact Matrices
+
+<br/>
 
 <strong>Figure 5. Contact matrices by wave.</strong>
 
@@ -361,6 +394,7 @@ source(file.path(here::here(), "r", "socialmixr_matrices.R"))
 cm_plot
 ```
 
+<br/>
 
 #### References
 
