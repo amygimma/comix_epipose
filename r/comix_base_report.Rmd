@@ -1,7 +1,6 @@
 ---
-title: "CoMix base report"
-author: Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID, Christopher Jarvis, John
-  Edmunds
+title: "CoMix social survey country report"
+author: Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID, Christopher Jarvis, John Edmunds
 date: "`r format(Sys.time(), '%A %d %B %Y')`"
 output:
   # pdf_document: default
@@ -21,6 +20,7 @@ source(file.path(here::here(), "r", "setup_report.R"))
 
 ```
 
+## `r country_name_`
 
 ## Introduction
 
@@ -141,17 +141,6 @@ kable(full_summary) %>% kable_styling(full_width = F, position = "left")
 ### Contact setting
 
 ```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
-contacts <- contacts %>% mutate(cnt_setting := factor(case_when(
-  cnt_home == 1 ~ "Home", 
-  cnt_work == 1 ~ "Work", 
-  cnt_school == 1 ~ "School", 
-  cnt_other == 1 ~ "Other")
-  
-))
-
-setting_order <-  c("Home", "Work", "School", "Other")
-contacts <- contacts %>% 
-  mutate(cnt_setting = fct_relevel(cnt_setting, setting_order))
 
 setting_all <- ggplot(
   contacts, 
@@ -265,19 +254,9 @@ kable(cnt_summary_table) %>%
 
 ## Mean number of contacts
 
+Crude mean contacts by participant age group for each wave.
+
 ```{r contact_means, echo=FALSE, message = FALSE, warning = FALSE}
-setting_order <-  c("Home", "Work", "School", "Other")
-contacts <- contacts %>% 
-  mutate(cnt_setting = fct_relevel(cnt_setting, setting_order))
-
-part_ages <- part %>% select(country, panel, wave, part_id, part_age_group)
-contacts <- left_join(contacts, part_ages, by = c("country", "panel", "wave", "part_id"))
-
-truncate_n <- 50
-trunc_contacts <- contacts %>%
-  arrange(cnt_setting) %>% 
-  group_by(wave, part_id) %>% 
-  slice(1:truncate_n)
 
 all_mean <- contacts %>% 
   count(wave, part_id) %>%
@@ -305,7 +284,7 @@ trunc_mean_age <- trunc_contacts %>%
   count(wave, part_id, part_age_group) %>%
   group_by(wave, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "Truncated to 50 contacts per participant") %>% 
+  mutate(Contacts = "Truncated to 50 contacts/participant") %>% 
   rename("Participant Age" = part_age_group) 
 
 contact_means <- rbindlist(list(all_mean, trunc_mean, all_mean_age, trunc_mean_age), use.names = T) %>%
@@ -320,11 +299,14 @@ contact_means_table <- contact_means %>%
               values_from = "Mean contacts", 
               names_prefix = "Wave ")
 
-contact_means_ages <- contact_means %>% filter(`Participant Age` != "All")
-ggplot(contact_means_ages, aes(x = factor(Wave), y = `Mean contacts`, fill = `Participant Age`)) +
+contact_means_ages <- contact_means %>% filter(`Participant Age` != "All") %>%
+  mutate(Wave = paste("Wave", Wave))
+
+ggplot(contact_means_ages, aes(x = `Participant Age`, y = `Mean contacts`,
+       fill = `Participant Age`)) +
   geom_col(position = "dodge") +
-  xlab("Wave") +
-  facet_grid(vars(Contacts)) +
+  xlab("Partcipant age") +
+  facet_grid(rows = vars(Contacts), cols = vars(factor(Wave))) +
   theme_bw() +
   ylab("Mean number of contacts")
 
@@ -333,28 +315,21 @@ kable(contact_means_table) %>%
 ```
 
 
-<!-- ## Contact Matrices -->
+## Contact Matrices
+
+Contact matrices are generated using the [socialmixr](https://github.com/sbfnk/socialmixr) R package. 
+
+Contacts are sampled from within age groups weighted using the UN World Population Prospects estimates from 2015, the latest data available within the socialmixr package. 
+
 
 ```{r contact_matrices, echo=FALSE}
-# age_limits_ <- c(18, 30, 40, 50, 60, 70, 120)
-# pop_data <- qread(file.path(here(),"pop_data", "unwpp_data.qs"))
-# pop_data <- pop_data %>% filter(country == part$country & year == 2020)
-# 
-# age_limits <- seq(15, 100, 5)
-# c_cm <- contacts %>% 
-#   filter(cnt_mass == "individual" ) %>%
-#   select("part_id", "cont_id", "cnt_age_est_min","cnt_age_est_max", "cnt_gender",
-#          "cnt_home", "cnt_work", "cnt_school")
-# 
-# p_cm <- part %>% 
-#   select("part_id",  "part_age", "part_gender", "hh_size")
-         # "dayofweek")
+# Plot generated in `r/socialmixr_matrices.R`
+source(file.path(here::here(), "r", "socialmixr_matrices.R"))
 
-# c_cm %>% rename(cnt_age_exact cnt_age_est_min cnt_age_est_max)
-# comix_survey <- socialmixr::survey(part, c_cm)
-# comix_cm <- socialmixr::contact_matrix(comix_survey, 
-                                       # survey.pop = pop_data,
-                                       # age.limits = age_limits_,
-                                       # symmetric = T)
-
+cm_plot
 ```
+
+
+### References
+
+Sebastian Funk (2020). socialmixr: Social Mixing Matrices for Infectious Disease Modelling. R package version 0.1.7.
