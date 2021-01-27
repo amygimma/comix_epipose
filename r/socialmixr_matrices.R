@@ -45,19 +45,19 @@ for(wave_ in unique(part$wave)) {
 
   reduced_cm <- Reduce("+", lapply(comix_cm_output$matrices,
                                    function(x) {x$matrix})) / length(comix_cm_output$matrices)
-  cm_df <- melt(reduced_cm, varnames = c("age1", "age2"), value.name = "contacts")
+  cm_df <- melt(reduced_cm, varnames = c("participant_age", "contact_age"), value.name = "contacts")
   cm_df <- cm_df %>% mutate(wave = wave_)
   wave_cm_dfs[[wave_]] <- cm_df
 }
 
 cm_dfs <- rbindlist(wave_cm_dfs)
-table(cm_dfs$age1)
+table(cm_dfs$participant_age)
 cm_dfs <- cm_dfs %>%
   mutate(wave = paste("Wave", wave),
-         age1 = factor(age1, levels = age_levs, labels = age_labels),
-         age2 = factor(age2, levels = age_levs, labels = age_labels))
+         participant_age = factor(participant_age, levels = age_levs, labels = age_labels),
+         contact_age = factor(contact_age, levels = age_levs, labels = age_labels))
 
-cm_plot <- ggplot(cm_dfs, aes(x = age2, y = age1, fill = contacts)) + theme(legend.position = "bottom") +
+cm_plot <- ggplot(cm_dfs, aes(x = contact_age, y = participant_age, fill = contacts)) + theme(legend.position = "bottom") +
   geom_tile() +
   facet_grid(cols = vars(wave)) +
   labs(
@@ -80,4 +80,14 @@ cm_plot <- ggplot(cm_dfs, aes(x = age2, y = age1, fill = contacts)) + theme(lege
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90))
 
+
+adj_mean_contacts <- cm_dfs %>%
+  group_by(wave, participant_age) %>%
+  summarise(mean_contacts = sum(contacts))
+
+
+adj_mean_contacts_table <- adj_mean_contacts %>%
+  pivot_wider(names_from = wave,
+              values_from = mean_contacts) %>%
+  rename("Participant age" =  participant_age)
 

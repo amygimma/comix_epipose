@@ -393,7 +393,7 @@ kable(contact_means_table) %>%
 
 <br/>
 
-<strong>Figure 5. Contact matrices by wave.</strong> Contacts truncated to 50 per participant per day.
+<strong>Figure 5. Contact matrices by wave.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
 
 ```{r contact_matrices, echo=FALSE}
 # Plot generated in `r/socialmixr_matrices.R`
@@ -401,6 +401,34 @@ source(file.path(here::here(), "r", "socialmixr_matrices.R"))
 
 cm_plot
 ```
+
+<br/>
+
+<strong>Figure 6. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+
+```{r adjusted_mean_figure, fig.height = 3, fig.width = 9}
+
+ggplot(adj_mean_contacts, aes(y = mean_contacts, x = participant_age,
+                              fill = participant_age)) +
+  geom_col() +
+  facet_grid(cols = vars(wave)) + 
+  xlab("Participant age") +
+  ylab("Mean contacts") +
+  labs(fill = "Participant age") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
+
+  
+```
+
+<br/>
+
+<strong>Table 5. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+
+```{r adjusted_mean_table}
+kable(adj_mean_contacts_table, digits = 2) %>% kable_styling()
+```
+
 
 <br/>
 
