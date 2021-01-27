@@ -148,7 +148,7 @@ part_summary_display_gender <- part_summary_gender %>%
          Group = case_when(
            Group == "female" ~ "Female",
            Group == "male" ~ "Male",
-           is.na(Group) ~ "Missing"
+           is.na(Group) ~ "Other or Missing"
          ))
 
 

@@ -7,9 +7,9 @@
 preset_variables <- TRUE
 
 # Group 1 countries
-# countries <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
+countries <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
 # Sample for single country
-countries <- "Poland"
+# countries <- "Poland"
 
 path_to_data <- "data"
 truncate_contacts_n <- 50
