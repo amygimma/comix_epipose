@@ -65,7 +65,11 @@ The CoMix survey in `r country_name_` has had `r length(unique(part$wave))` wave
 
 ```{r timetable, fig.cap="Table 1: Timeline of survey rounds"}
 
-timetable <- part %>% group_by(wave) %>% summarize(min_date = min(date), max_date = max(date), participants = n()) %>% ungroup()
+timetable <- part %>% group_by(wave) %>% 
+  summarize(min_date = format(min(date), "%d %b %y"), 
+            max_date = format(max(date), "%d %b %y"), 
+            participants = n()) %>% 
+  ungroup()
 
 count_contacts <- contacts %>% count(wave, name = "contacts")
 
@@ -192,7 +196,7 @@ kable(full_summary) %>%
 
 <br/>
 
-<strong>Figure 2. Proportion of contacts by setting and wave for all contacts (individually reported and aggregated) and for individually-reported contacts only.</strong>
+<strong>Figure 2. Proportion of contacts by setting and wave.</strong> A) All contacts (both individually-reported and reported in aggregated contact questions); B) individually-reported contacts only.
 
 ```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
 
@@ -205,7 +209,7 @@ setting_all <- ggplot(
   labs(fill = "Contact setting") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("All contacts") +
+  ggtitle("A. All contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12)) 
 
@@ -220,7 +224,7 @@ setting_individual <- ggplot(
   xlab("Proportion") +
   labs(fill = "Contact setting") +
   coord_flip() +
-  ggtitle("Individually-reported contacts") +
+  ggtitle("B. Individually-reported contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
@@ -249,7 +253,7 @@ cnt_summary_setting <- contacts %>%
 
 <br/>
 
-<strong>Figure 3. Proportion of contacts by duration of contact and wave.</strong>
+<strong>Figure 3. Proportion of contacts by duration of contact and wave.</strong> A) All individually-reported contacts; B) individually-reported contacts, excluding the participant's household members.
 
 ```{r contact_duration, echo = FALSE, fig.width = 7, fig.height = 4}
 
@@ -262,7 +266,7 @@ total_time_all <- ggplot(
   labs(fill = "Contact time") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("Individually-reported contacts") +
+  ggtitle("A. Individual contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
@@ -278,7 +282,7 @@ total_time_non_household <- ggplot(
   labs(fill = "Contact time") +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
-  ggtitle("Individually-reported contacts\n\nin non-household settings") +
+  ggtitle("B. Non-household contacts") +
   theme_bw() +
   theme(plot.title = element_text(size=12))
 
@@ -313,7 +317,7 @@ kable(cnt_summary_table) %>%
   collapse_rows(columns = 1, valign = "top")
 ```
 
-<strong>Table 3. Proportion of contacts by setting and duration of contact and wave, with all contacts included.</strong>
+<strong>Table 3. Contacts by setting and duration of contact and wave.</strong> Number and percentage of contacts by category for all contacts (individually-reported and reported in aggregated contact questions).
 
 <br/>
 
@@ -393,22 +397,26 @@ kable(contact_means_table) %>%
 
 <br/>
 
-<strong>Figure 5. Contact matrices by wave.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+#### All contacts
+
+<br/>
+
+<strong>Figure 5. Contact matrices by wave.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
 ```{r contact_matrices, echo=FALSE}
 # Plot generated in `r/socialmixr_matrices.R`
 source(file.path(here::here(), "r", "socialmixr_matrices.R"))
 
-cm_plot
+cm_plot_all
 ```
 
 <br/>
 
-<strong>Figure 6. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+<strong>Figure 6. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
 ```{r adjusted_mean_figure, fig.height = 3, fig.width = 9}
 
-ggplot(adj_mean_contacts, aes(y = mean_contacts, x = participant_age,
+ggplot(adj_mean_contacts_all, aes(y = mean_contacts, x = participant_age,
                               fill = participant_age)) +
   geom_col() +
   facet_grid(cols = vars(wave)) + 
@@ -423,10 +431,54 @@ ggplot(adj_mean_contacts, aes(y = mean_contacts, x = participant_age,
 
 <br/>
 
-<strong>Table 5. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+<strong>Table 5. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
-```{r adjusted_mean_table}
-kable(adj_mean_contacts_table, digits = 2) %>% kable_styling()
+```{r adjusted_mean_table_all}
+kable(adj_mean_contacts_table_all, digits = 2) %>% kable_styling()
+```
+
+
+<br/>
+
+
+#### Adult contacts
+
+<br/>
+
+<strong>Figure 7. Symmetric adult participant to adult contact matrices by wave.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+
+```{r contact_matrices_adult, echo=FALSE}
+# Plot generated in `r/socialmixr_matrices.R`
+
+cm_plot_adult
+```
+
+<br/>
+
+
+<strong>Figure 8. Adult participant to adult contact means by wave.</strong> Contact means as calculated from symmetric, adult participant to adult contact symmetric matrices. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+
+```{r adjusted_mean_figure_adult, fig.height = 3, fig.width = 9}
+
+ggplot(adj_mean_contacts_adult, aes(y = mean_contacts, x = participant_age,
+                              fill = participant_age)) +
+  geom_col() +
+  facet_grid(cols = vars(wave)) + 
+  xlab("Participant age") +
+  ylab("Mean contacts") +
+  labs(fill = "Participant age") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
+
+  
+```
+
+<br/>
+
+<strong>Table 6. Adult participant to adult contact means by wave.</strong> Contact means as calculated from symmetric, adult particpant to adult contact symmetric matrices. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+
+```{r adjusted_mean_table_adult}
+kable(adj_mean_contacts_table_adult, digits = 2) %>% kable_styling()
 ```
 
 
