@@ -434,7 +434,7 @@ ggplot(adj_mean_contacts_all, aes(y = mean_contacts, x = participant_age,
 <strong>Table 5. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
 ```{r adjusted_mean_table_all}
-kable(adj_mean_contacts_table_all, digits = 2) %>% kable_styling()
+kable(adj_mean_contacts_table_all, digits = 2) %>% kable_styling(full_width = F, position = "left")
 ```
 
 
@@ -478,7 +478,7 @@ ggplot(adj_mean_contacts_adult, aes(y = mean_contacts, x = participant_age,
 <strong>Table 6. Adult participant to adult contact means by wave.</strong> Contact means as calculated from symmetric, adult particpant to adult contact symmetric matrices. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
 
 ```{r adjusted_mean_table_adult}
-kable(adj_mean_contacts_table_adult, digits = 2) %>% kable_styling()
+kable(adj_mean_contacts_table_adult, digits = 2) %>% kable_styling(full_width = F, position = "left")
 ```
 
 
