@@ -1,18 +1,15 @@
-if (!exists("country_name_")) {
-  source(here::here(), "r", "setup_report.R")
+
+
+# Load data -------------------
+if(!exists("here")) {
+  library(here)
+  here::here()
+}
+if (!exists("country_name_") | !exists("part")) {
+  source(file.path(here::here(), "r", "setup_report.R"))
 }
 
-age_limits_ <- c(0, 5, 11, 18, 30, 40, 50, 60, 70, 120)
-age_levs <- c("[0,5)", "[5,11)", "[11,18)", "[18,30)", "[30,40)", "[40,50)",
-              "[50,60)", "[60,70)", "70+")
-age_labels <- c("0-4", "5-11", "12-18", "18-29", "30-39", "40-49",
-                "50-59", "60-69", "70+")
-age_map <- age_labels
-names(age_map) <- age_levs
-
-# Note: Population data is from 2015, will update with newer pop estimates
-pop_data <- socialmixr::wpp_age(countries = c(country_name_), years = c(2015))
-
+# Simplify data -------------------
 cnt_sm <- trunc_contacts %>%
   select("country", "wave", "part_id", "part_wave_uid", "cnt_age_est_min",
          "cnt_age_est_max", "cnt_gender",
@@ -26,6 +23,24 @@ part_sm <- part %>%
          "hh_size") %>%
   mutate(part_age = NA_integer_)
 
+
+# Set age limits -------------------
+age_limits_ <- c(0, 5, 11, 18, 30, 40, 50, 60, 70, 120)
+age_levs <- c("[0,5)", "[5,11)", "[11,18)", "[18,30)", "[30,40)", "[40,50)",
+              "[50,60)", "[60,70)", "70+")
+age_labels <- c("0-4", "5-11", "12-18", "18-29", "30-39", "40-49",
+                "50-59", "60-69", "70+")
+age_map <- age_labels
+names(age_map) <- age_levs
+
+
+# Get population data -------------------
+# Note: Population data is from 2015, will update with newer pop estimates
+pop_data <- socialmixr::wpp_age(countries = c(country_name_), years = c(2015))
+
+
+
+# Generate full matrices, adjusted by day of week -------------------
 wave_cm_dfs <- list()
 for(wave_ in unique(part$wave)) {
   p_filt <- part_sm %>% filter(wave == wave_)
@@ -36,12 +51,14 @@ for(wave_ in unique(part$wave)) {
     contacts =   c_filt)
 
   comix_cm_output <- socialmixr::contact_matrix(comix_survey,
-                                                survey.pop = pop_data,
+                                                # survey.pop = pop_data,
                                                 age.limits = age_limits_,
                                                 symmetric = F,
                                                 n = matrix_boots_n,
                                                 weigh.dayofweek = T,
-                                                estimated.contact.age = "sample"
+                                                estimated.contact.age = "sample",
+                                                estimated.participant.age = "sample",
+                                                missing.contact.age = "sample"
   )
 
   reduced_cm <- Reduce("+", lapply(comix_cm_output$matrices,
@@ -58,7 +75,7 @@ cm_dfs <- cm_dfs %>%
          participant_age = factor(participant_age, levels = age_levs, labels = age_labels),
          contact_age = factor(contact_age, levels = age_levs, labels = age_labels))
 
-cm_plot <- ggplot(cm_dfs, aes(x = contact_age, y = participant_age, fill = contacts)) + theme(legend.position = "bottom") +
+cm_plot_all <- ggplot(cm_dfs, aes(x = contact_age, y = participant_age, fill = contacts)) + theme(legend.position = "bottom") +
   geom_tile() +
   facet_grid(cols = vars(wave)) +
   labs(
@@ -72,7 +89,6 @@ cm_plot <- ggplot(cm_dfs, aes(x = contact_age, y = participant_age, fill = conta
     values = c(0, 1, 3, 5, 12)/12,
     breaks =  seq(0,15,0.5),
     limits = c(0,3.5)
-
   )  +
   coord_fixed(ratio = 1, xlim = NULL,
               ylim = NULL, expand = FALSE, clip = "off") +
@@ -82,13 +98,96 @@ cm_plot <- ggplot(cm_dfs, aes(x = contact_age, y = participant_age, fill = conta
   theme(axis.text.x = element_text(angle = 90))
 
 
-adj_mean_contacts <- cm_dfs %>%
+adj_mean_contacts_all <- cm_dfs %>%
   group_by(wave, participant_age) %>%
   summarise(mean_contacts = sum(contacts))
 
 
-adj_mean_contacts_table <- adj_mean_contacts %>%
+adj_mean_contacts_table_all <- adj_mean_contacts_all %>%
   pivot_wider(names_from = wave,
               values_from = mean_contacts) %>%
   rename("Participant age" =  participant_age)
+
+
+# Generate adult matrices, adjusted by day of week and population --------------
+
+cnt_sm_adult <- cnt_sm %>%
+  filter(cnt_age_est_min > 18 | is.na(cnt_age_est_min))
+age_limits_ <- c(18, 30, 40, 50, 60, 70, 120)
+age_levs <- c("[18,30)", "[30,40)", "[40,50)", "[50,60)", "[60,70)", "70+")
+age_labels <- c("18-29", "30-39", "40-49", "50-59", "60-69", "70+")
+age_map <- age_labels
+names(age_map) <- age_levs
+# adult_contacts <-
+
+wave_cm_dfs_adult <- list()
+for(wave_ in unique(part$wave)) {
+  p_filt <- part_sm %>% filter(wave == wave_)
+  c_filt <- cnt_sm_adult %>% filter(wave == wave_)
+
+  comix_survey <- socialmixr::survey(
+    participants =   p_filt,
+    contacts =   c_filt)
+
+  # use population data and create symmetric matrices
+  comix_cm_output <- socialmixr::contact_matrix(comix_survey,
+                                                survey.pop = pop_data,
+                                                age.limits = age_limits_,
+                                                symmetric = T,
+                                                n = matrix_boots_n,
+                                                weigh.dayofweek = T,
+                                                estimated.contact.age = "sample",
+                                                estimated.participant.age = "sample",
+                                                missing.contact.age = "sample"
+  )
+
+  # browser()
+  reduced_cm <- Reduce("+", lapply(comix_cm_output$matrices,
+                                   function(x) {x$matrix})) / length(comix_cm_output$matrices)
+  cm_df <- melt(reduced_cm, varnames = c("participant_age", "contact_age"), value.name = "contacts")
+  cm_df <- cm_df %>% mutate(wave = wave_)
+  wave_cm_dfs_adult[[wave_]] <- cm_df
+}
+
+cm_dfs_adult <- rbindlist(wave_cm_dfs_adult)
+cm_dfs_adult <- cm_dfs_adult %>%
+  mutate(wave = paste("Wave", wave),
+         participant_age = factor(participant_age, levels = 1:6, labels = age_labels),
+         contact_age = factor(contact_age, levels = age_levs, labels = age_labels))
+table(cm_dfs_adult$participant_age)
+
+cm_plot_adult <- ggplot(cm_dfs_adult, aes(x = contact_age, y = participant_age, fill = contacts)) + theme(legend.position = "bottom") +
+  geom_tile() +
+  facet_grid(cols = vars(wave)) +
+  labs(
+    y = "Age of participant",
+    x = "Age of contact",
+    fill = "Contacts"
+  ) +
+  scale_fill_gradientn(
+    colors = c("#0D5257","#00BF6F", "#FFB81C"),
+    na.value = "#EEEEEE",
+    values = c(0, 1, 3, 5, 12)/12,
+    breaks =  seq(0,15,0.5),
+    limits = c(0,3.5)
+  )  +
+  coord_fixed(ratio = 1, xlim = NULL,
+              ylim = NULL, expand = FALSE, clip = "off") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 10),
+        axis.text.y =  element_text(size = 10)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90))
+
+
+adj_mean_contacts_adult <- cm_dfs_adult %>%
+  group_by(wave, participant_age) %>%
+  summarise(mean_contacts = sum(contacts))
+
+
+adj_mean_contacts_table_adult <- adj_mean_contacts_adult %>%
+  pivot_wider(names_from = wave,
+              values_from = mean_contacts) %>%
+  rename("Participant age" =  participant_age)
+
+
 
