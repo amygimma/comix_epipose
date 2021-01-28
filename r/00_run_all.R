@@ -1,8 +1,10 @@
 # Runs reports for one or multiple countries from a single data file
 
 # Instructions: -----
-# If running with 00_run_all.R script: Set country name and other variables below
-# If running with Knit button: Set country name and other variables in `r/00_run_all.R` file
+# If running with script (in console or terminal): Set country name and other
+  # variables in `r/00_run_all.R` file
+# If running with Knit button: Set country name and other variables below
+
 
 preset_variables <- TRUE
 
