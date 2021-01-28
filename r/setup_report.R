@@ -34,7 +34,6 @@ library(patchwork)
 
 library(socialmixr)
 library(reshape2)
-library(ggplot2)
 library(countrycode)
 
 # library(flextable)
