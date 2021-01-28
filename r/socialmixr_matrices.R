@@ -22,8 +22,9 @@ cnt_sm <- trunc_contacts %>%
   mutate(cont_wave_uid = paste(part_wave_uid, row_number(), sep = "-"))
 
 part_sm <- part %>%
-  select("country", "wave", "part_id", "part_wave_uid",  "part_age", "part_gender",
-         "hh_size")
+  select("country", "wave", "part_id", "part_wave_uid",  "part_age_est_min", "part_age_est_max","part_gender",
+         "hh_size") %>%
+  mutate(part_age = NA_integer_)
 
 wave_cm_dfs <- list()
 for(wave_ in unique(part$wave)) {
