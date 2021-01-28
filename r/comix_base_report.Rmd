@@ -44,10 +44,7 @@ source(file.path(here::here(), "r", "setup_report.R"))
 *Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID COVID-19 Working Group, Christopher Jarvis, John Edmunds*
 London school of Hygiene and Tropical Medicine.
 
-Created as part of the EpiPose project This funded by the European Union's 
-Horizon 2020 Research and Innovations Programme - project EpiPose (Epidemic 
-intelligence to Minimize COVID-19's Public Health, Societal and Economical Impact). 
-
+Created as part of the EpiPose project, funded by the EU Horizon 2020 Research and Innovations Programme - project EpiPose (Epidemic Intelligence to Minimize COVID-19’s Public Health, Societal and Economical Impact, No 101003688).
 
 <strong>Report created:</strong> `r format(Sys.time(), '%d %B %Y')` <br>
 <strong>Survey dates:</strong> `r format(min(part$survey_date), '%d %B %Y')` to `r format(max(part$survey_date), '%d %B %Y')`
