@@ -87,8 +87,8 @@ cm_plot_all <- ggplot(cm_dfs, aes(x = contact_age, y = participant_age, fill = c
     colors = c("#0D5257","#00BF6F", "#FFB81C"),
     na.value = "#EEEEEE",
     values = c(0, 1, 3, 5, 12)/12,
-    breaks =  seq(0,15,0.5),
-    limits = c(0,3.5)
+    breaks =  seq(0,2,0.5),
+    limits = c(0,2)
   )  +
   coord_fixed(ratio = 1, xlim = NULL,
               ylim = NULL, expand = FALSE, clip = "off") +
@@ -121,6 +121,7 @@ names(age_map) <- age_levs
 # adult_contacts <-
 
 wave_cm_dfs_adult <- list()
+mean_contacts_split_waves <- list()
 for(wave_ in unique(part$wave)) {
   p_filt <- part_sm %>% filter(wave == wave_)
   c_filt <- cnt_sm_adult %>% filter(wave == wave_)
@@ -141,15 +142,36 @@ for(wave_ in unique(part$wave)) {
                                                 missing.contact.age = "sample"
   )
 
-  # browser()
   reduced_cm <- Reduce("+", lapply(comix_cm_output$matrices,
                                    function(x) {x$matrix})) / length(comix_cm_output$matrices)
+
+    comix_cm_split <- socialmixr::contact_matrix(comix_survey,
+                                                survey.pop = pop_data,
+                                                age.limits = age_limits_,
+                                                split = T,
+                                                symmetric = T,
+                                                n = matrix_boots_n,
+                                                weigh.dayofweek = T,
+                                                estimated.contact.age = "sample",
+                                                estimated.participant.age = "sample",
+                                                missing.contact.age = "sample"
+  )
+
+  contact_means <- unlist(lapply(
+    comix_cm_split$matrices, function(cm_output) cm_output$mean.contacts))
+  mean_contacts_split <- mean(contact_means)
+
   cm_df <- melt(reduced_cm, varnames = c("participant_age", "contact_age"), value.name = "contacts")
   cm_df <- cm_df %>% mutate(wave = wave_)
   wave_cm_dfs_adult[[wave_]] <- cm_df
+  mean_contacts_split_waves[[wave_]] <- data.frame(
+    wave = paste("Wave ", wave_), mean_contacts = mean_contacts_split)
+
 }
 
 cm_dfs_adult <- rbindlist(wave_cm_dfs_adult)
+mean_contacts_adult_df <- rbindlist(mean_contacts_split_waves)
+
 cm_dfs_adult <- cm_dfs_adult %>%
   mutate(wave = paste("Wave", wave),
          participant_age = factor(participant_age, levels = 1:6, labels = age_labels),
@@ -168,8 +190,8 @@ cm_plot_adult <- ggplot(cm_dfs_adult, aes(x = contact_age, y = participant_age, 
     colors = c("#0D5257","#00BF6F", "#FFB81C"),
     na.value = "#EEEEEE",
     values = c(0, 1, 3, 5, 12)/12,
-    breaks =  seq(0,15,0.5),
-    limits = c(0,3.5)
+    breaks =  seq(0,2,0.5),
+    limits = c(0,2)
   )  +
   coord_fixed(ratio = 1, xlim = NULL,
               ylim = NULL, expand = FALSE, clip = "off") +
