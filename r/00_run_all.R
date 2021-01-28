@@ -13,7 +13,7 @@ countries <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "S
 
 path_to_data <- "data"
 truncate_contacts_n <- 50
-matrix_boots_n <- 250
+matrix_boots_n <- 1000
 
 
 for (country in countries) {

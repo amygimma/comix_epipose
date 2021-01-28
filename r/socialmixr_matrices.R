@@ -145,16 +145,17 @@ for(wave_ in unique(part$wave)) {
   reduced_cm <- Reduce("+", lapply(comix_cm_output$matrices,
                                    function(x) {x$matrix})) / length(comix_cm_output$matrices)
 
-    comix_cm_split <- socialmixr::contact_matrix(comix_survey,
-                                                survey.pop = pop_data,
-                                                age.limits = age_limits_,
-                                                split = T,
-                                                symmetric = T,
-                                                n = matrix_boots_n,
-                                                weigh.dayofweek = T,
-                                                estimated.contact.age = "sample",
-                                                estimated.participant.age = "sample",
-                                                missing.contact.age = "sample"
+  # Create split matrices - not used in first report ---------------------------
+  comix_cm_split <- socialmixr::contact_matrix(comix_survey,
+                                               survey.pop = pop_data,
+                                               age.limits = age_limits_,
+                                               split = T,
+                                               symmetric = T,
+                                               n = matrix_boots_n,
+                                               weigh.dayofweek = T,
+                                               estimated.contact.age = "sample",
+                                               estimated.participant.age = "sample",
+                                               missing.contact.age = "sample"
   )
 
   contact_means <- unlist(lapply(

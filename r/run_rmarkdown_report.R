@@ -25,5 +25,6 @@ rmarkdown::render(file.path("r", "comix_base_report.Rmd"),
                     file.path(here::here(),
                               sub_folder_name,
                               paste("CoMix_Report_",
-                              format(Sys.time(), '%d-%b-%Y'),
-                              ".html", sep="")))
+                                    country_name_, "_",
+                                    format(Sys.time(), '%d-%b-%Y'),
+                                    ".html", sep="")))
