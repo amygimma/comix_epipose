@@ -10,12 +10,12 @@ This code was written in R version 4, please use this version to avoid difficult
 
 You can download the new version of R [here](https://www.r-project.org/).
 
-RStudio also has built-in for choosing between R versions, if necessary, described [here](https://support.rstudio.com/hc/en-us/articles/200486138-Changing-R-versions-for-RStudio-desktop).
+RStudio also has built-in functionality for choosing between R versions, if necessary, described [here](https://support.rstudio.com/hc/en-us/articles/200486138-Changing-R-versions-for-RStudio-desktop).
 
 
 ##### Recommended workflow, run with `r/00_run_all.R` script
 
-1. Open as a project in RStudio by clicking `comix_epipose.Rproj`.
+1. Open this data repository as a project in RStudio by clicking `comix_epipose.Rproj`.
 2. If needed, install the packages by copying and pasting the code below or running source(file.path("r", "install_packages.R")).
 3. Add your country's data in the `data` folder in the project directory.
 4. Set country name and other variables in the `r/00_run_all.R` file. 
