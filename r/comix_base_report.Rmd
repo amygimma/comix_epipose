@@ -39,11 +39,14 @@ source(file.path(here::here(), "r", "setup_report.R"))
 
 ```
 
-# CoMix social contact survey
+# CoMix social contact survey: Report for `r country_name_` waves 1-`r max(part$wave)`
 
-### Country report for `r country_name_`
+*Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID COVID-19 Working Group, Christopher Jarvis, John Edmunds*
+London school of Hygiene and Tropical Medicine.
 
-*Amy Gimma, Kerry Wong, Kevin Van Zandvoort, CMMID COVID-19 Working Group, London School of Hygiene and Tropical Medicine, Christopher Jarvis, John Edmunds*
+Created as part of the EpiPose project funded by XXX
+
+
 
 `r format(Sys.time(), '%A, %d %B %Y')`
 
