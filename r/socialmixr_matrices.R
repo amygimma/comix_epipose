@@ -1,5 +1,4 @@
 
-
 # Load data -------------------
 if(!exists("here")) {
   library(here)
@@ -8,6 +7,11 @@ if(!exists("here")) {
 if (!exists("country_name_") | !exists("part")) {
   source(file.path(here::here(), "r", "setup_report.R"))
 }
+
+# Set up directory ------------------
+
+sub_folder_name <- file.path(here::here(), "outputs", country_name_)
+dir.create(sub_folder_name, recursive = T, showWarnings = F)
 
 # Simplify data -------------------
 cnt_sm <- trunc_contacts %>%
@@ -74,6 +78,10 @@ cm_dfs <- cm_dfs %>%
   mutate(wave = paste("Wave", wave),
          participant_age = factor(participant_age, levels = age_levs, labels = age_labels),
          contact_age = factor(contact_age, levels = age_levs, labels = age_labels))
+
+write.csv(format(cm_dfs),
+          file.path(sub_folder_name, "cm_all_contacts_weighted_day.csv"),
+          row.names = FALSE)
 
 cm_plot_all <- ggplot(cm_dfs, aes(x = contact_age, y = participant_age, fill = contacts)) + theme(legend.position = "bottom") +
   geom_tile() +
@@ -178,6 +186,11 @@ cm_dfs_adult <- cm_dfs_adult %>%
          participant_age = factor(participant_age, levels = 1:6, labels = age_labels),
          contact_age = factor(contact_age, levels = age_levs, labels = age_labels))
 table(cm_dfs_adult$participant_age)
+
+write.csv(format(cm_dfs_adult),
+          file.path(sub_folder_name, "cm_adult_contacts_weighted_day_pop_symmetric.csv"),
+          row.names = FALSE)
+
 
 cm_plot_adult <- ggplot(cm_dfs_adult, aes(x = contact_age, y = participant_age, fill = contacts)) + theme(legend.position = "bottom") +
   geom_tile() +

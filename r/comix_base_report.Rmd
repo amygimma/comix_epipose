@@ -69,8 +69,8 @@ The CoMix survey in `r country_name_` has had `r length(unique(part$wave))` wave
 ```{r timetable, fig.cap="Table 1: Timeline of survey rounds"}
 
 timetable <- part %>% group_by(wave) %>% 
-  summarize(min_date = format(min(date), "%d %b %y"), 
-            max_date = format(max(date), "%d %b %y"), 
+  summarize(min_date = format(min(survey_date), "%d %b %y"), 
+            max_date = format(max(survey_date), "%d %b %y"), 
             participants = n()) %>% 
   ungroup()
 
@@ -118,23 +118,24 @@ ggplot(obs_per_date) +
 <br/>
 
 ```{r participant_table, echo=FALSE}
+
 part_summary_age <- part %>%
   count(wave, part_age_group) %>%
   group_by(wave) %>%
-  mutate(prop = round(prop.table(n), 3)) %>%
-  mutate(display = paste(n, " (", (prop * 100), "%)", sep = ""))
+  mutate(prop = prop.table(n), 3) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = ""))
 
 part_summary_gender <- part %>%
   count(wave, part_gender) %>%
   group_by(wave) %>%
   mutate(prop = round(prop.table(n), 3)) %>%
-  mutate(display = paste(n, " (", (prop * 100), "%)", sep = ""))
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = ""))
 
 part_summary_hh_size <- part %>% 
   count(wave, hh_size_group) %>%
   group_by(wave) %>%
   mutate(prop = round(prop.table(n), 3)) %>%
-  mutate(display = paste(n, " (", (prop * 100), "%)", sep = ""))
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = ""))
 
 # part_summary_pop_dens <- part %>%
 #   count(wave, popul) %>%
@@ -240,7 +241,7 @@ cnt_summary_setting <- contacts %>%
   count(wave, cnt_setting) %>%
   group_by(wave) %>%
   mutate(prop = round(prop.table(n), 3)) %>%
-  mutate(display = paste(n, " (", (prop * 100), "%)", sep = "")) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = "")) %>%
   pivot_wider(id_cols = "cnt_setting", names_from = "wave", values_from = "display", names_prefix = "Wave ")  %>%
   rename("Group" = cnt_setting) %>%
   mutate(Category = "Contact setting") %>%
@@ -301,7 +302,7 @@ cnt_summary_duration <- contacts %>%
   count(wave, cnt_total_time) %>%
   group_by(wave) %>%
   mutate(prop = round(prop.table(n), 3)) %>%
-  mutate(display = paste(n, " (", (prop * 100), "%)", sep = "")) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = "")) %>%
   pivot_wider(id_cols = "cnt_total_time", names_from = "wave", values_from = "display", names_prefix = "Wave ")  %>%
   rename("Group" = cnt_total_time) %>%
   mutate(Category = "Contact time") %>%
@@ -473,6 +474,22 @@ ggplot(adj_mean_contacts_adult, aes(y = mean_contacts, x = participant_age,
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
 
+
+# ggthemr::ggthemr("grape")
+# ggplot(adj_mean_contacts_adult, 
+#        aes(y = mean_contacts, 
+#            x = wave,
+#            group = participant_age, 
+#            color = participant_age)) +
+#   geom_point() +
+#   geom_line() +
+#   expand_limits(y = 0) +
+#   facet_wrap(vars(participant_age)) +
+#   xlab("Wave") +
+#   ylab("Mean contacts") +
+#   labs(color = "Participant age") +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
   
 ```
 

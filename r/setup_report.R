@@ -5,9 +5,11 @@
   # If running with run_all.R script: Set country name and other variables
     # in `r/00_run_all.R` file (and ignore variables below)
 
+# Set seed -----
+set.seed(01012021)
 
-
-# Important: Do not change preset_variables code -----
+# Set variables -----
+# Important: Do not change preset_variables variable -----
 if (!exists("preset_variables")) preset_variables <- FALSE
 
 if (preset_variables == FALSE) {
@@ -18,7 +20,7 @@ if (preset_variables == FALSE) {
   matrix_boots_n <- 250
 }
 
-
+# Load libraries -----
 library(here)
 library(qs)
 library(dplyr)
@@ -94,4 +96,8 @@ trunc_contacts <- contacts %>%
   slice(1:truncate_contacts_n) %>%
   ungroup()
 
+# Functions
 
+format_n <- function(n) {
+  formatC(n, 1, format = "f")
+}
