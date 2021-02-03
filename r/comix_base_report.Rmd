@@ -333,30 +333,33 @@ kable(cnt_summary_table) %>%
 
 ```{r contact_means_plot, echo=FALSE, message = FALSE, warning = FALSE}
 
-all_mean <- contacts %>% 
-  count(wave, part_id) %>%
+all_mean2 <- part_contacts %>% 
+  group_by(wave, part_id) %>%
+  summarize(n = sum(cnt_any, na.rm = T)) %>%
   group_by(wave) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "All contacts", "Participant age" = "All") 
- 
+  mutate(Contacts = "All", "Participant age" = "All") 
 
-trunc_mean <- trunc_contacts %>% 
-  count(wave, part_id) %>%
-  group_by(wave) %>%
+
+trunc_mean <- trunc_part_contacts %>% 
+  group_by(wave, part_id) %>%
+  summarize(n = sum(cnt_any, na.rm = T)) %>%
   summarise("Mean contacts" = mean(n)) %>%
-   mutate(Contacts = "Truncated to 50 contacts per participant", "Participant age" = "All") 
+  mutate(Contacts = "Truncated to 50 contacts per participant", "Participant age" = "All") 
 
 
 
-all_mean_age <- contacts %>% 
-  count(wave, part_id, part_age_group) %>%
+all_mean_age <- part_contacts %>% 
+  group_by(wave, part_id, part_age_group) %>%
+  summarize(n = sum(cnt_any, na.rm = T)) %>%
   group_by(wave, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
   mutate(Contacts = "All contacts") %>% 
   rename("Participant age" = part_age_group)
 
-trunc_mean_age <- trunc_contacts %>% 
-  count(wave, part_id, part_age_group) %>%
+trunc_mean_age <- trunc_part_contacts %>% 
+  group_by(wave, part_id, part_age_group) %>%
+  summarize(n = sum(cnt_any, na.rm = T)) %>%
   group_by(wave, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
   mutate(Contacts = "Truncated to 50 contacts/participant") %>% 
@@ -378,12 +381,13 @@ contact_means_ages <- contact_means %>% filter(`Participant age` != "All") %>%
   mutate(Wave = paste("Wave", Wave))
 
 ggplot(contact_means_ages, aes(x = `Participant age`, y = `Mean contacts`,
-       fill = `Participant age`)) +
+                               fill = `Participant age`)) +
   geom_col(position = "dodge") +
   xlab("Partcipant age") +
   facet_grid(rows = vars(Contacts), cols = vars(factor(Wave))) +
   theme_bw() +
-  ylab("Mean number of contacts")
+  ylab("Mean number of contacts") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
 ```
 
 <br/>
