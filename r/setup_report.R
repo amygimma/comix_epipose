@@ -73,7 +73,7 @@ contacts <- qread(file.path(here::here(), path_to_data, contacts_file)) %>%
 
 
 # Prepare data -------------
-
+contacts <- contacts %>% mutate(cnt_any = 1)
 contacts <- contacts %>% mutate(cnt_setting := factor(case_when(
   cnt_home == 1 ~ "Home",
   cnt_work == 1 ~ "Work",
@@ -90,11 +90,17 @@ part_ages <- part %>% select(country, panel, wave, part_id, part_age_group)
 contacts <- left_join(contacts, part_ages,
                       by = c("country", "panel", "wave", "part_id"))
 
+
 trunc_contacts <- contacts %>%
   arrange(cnt_setting) %>%
   group_by(wave, part_id) %>%
   slice(1:truncate_contacts_n) %>%
   ungroup()
+
+byv <- c("country", "panel", "wave", "part_id", "part_age_group", "part_gender", "part_gender_nb")
+base_part <- part %>% select(byv)
+part_contacts <- merge(base_part, contacts, all.x = T)
+part_trunc_contacts <- merge(base_part, trunc_contacts, all.x = T)
 
 # Functions
 
