@@ -332,6 +332,17 @@ kable(cnt_summary_table) %>%
 <strong>Figure 4. Crude mean contacts by participant age group and wave.</strong>   Reported by all contacts and contacts truncated to 50 per participant per day.
 
 ```{r contact_means_plot, echo=FALSE, message = FALSE, warning = FALSE}
+part_contacts <- part_contacts %>% mutate(cnt_work = ifelse(is.na(cnt_work), 0, cnt_work))
+p <- part %>% select(part_wave_uid, part_attend_work_yesterday)
+part_contacts <- merge(p, part_contacts, by = "part_wave_uid")
+work_mean2 <- part_contacts %>% 
+    filter(part_attend_work_yesterday == "yes") %>%
+    group_by(wave, part_id, part_age_group) %>%
+    summarize(n = sum(cnt_work, na.rm = T)) %>%
+    group_by(wave, part_age_group) %>%
+    summarise("Mean contacts" = mean(n)) %>%
+    mutate(Contacts = "All", "Participant age" = "All") 
+
 
 all_mean2 <- part_contacts %>% 
   group_by(wave, part_id) %>%

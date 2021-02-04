@@ -97,8 +97,11 @@ trunc_contacts <- contacts %>%
   slice(1:truncate_contacts_n) %>%
   ungroup()
 
+
+# Create contacts with selected participant data
 byv <- c("country", "panel", "wave", "part_id", "part_age_group", "part_gender", "part_gender_nb")
 base_part <- part %>% select(byv)
+
 part_contacts <- merge(base_part, contacts, all.x = T)
 part_trunc_contacts <- merge(base_part, trunc_contacts, all.x = T)
 
