@@ -9,7 +9,9 @@
 preset_variables <- TRUE
 
 # Group 1 countries
-countries <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
+g1 <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
+g2 <- c("Finland", "Lithuania", "Switzerland")
+countries <- c(g1)
 # Sample for single country
 # countries <- "Denmark"
 

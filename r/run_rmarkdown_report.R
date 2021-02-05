@@ -13,6 +13,8 @@ source(file.path("r", "setup_report.R"))
 sub_folder_name <- file.path("outputs", country_name_)
 dir.create(sub_folder_name, recursive = T, showWarnings = F)
 
+message(paste("starting:", countryname_dict))
+
 rmarkdown::render(file.path("r", "comix_base_report.Rmd"),
                   params = list(
                     preset_variables = preset_variables,
@@ -28,3 +30,8 @@ rmarkdown::render(file.path("r", "comix_base_report.Rmd"),
                                     country_name_, "_",
                                     format(Sys.time(), '%d-%b-%Y'),
                                     ".html", sep="")))
+
+message(paste("finished:", country_name_))
+
+
+

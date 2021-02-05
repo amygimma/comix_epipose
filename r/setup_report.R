@@ -50,7 +50,10 @@ map_eu_nations <- c(
   "fr" = "France",
   "it" = "Italy",
   "pl" = "Poland",
-  "pt" = "Portugal"
+  "pt" = "Portugal",
+  "lt" = "Lithuania",
+  "ch" = "Switzerland",
+  "fi" = "Finland"
 )
 # Read participants data ---------
 
@@ -71,6 +74,8 @@ contacts <- qread(file.path(here::here(), path_to_data, contacts_file)) %>%
   mutate(country_name = map_eu_nations[country]) %>%
   filter(country_name == country_name_)
 
+if (nrow(part) == 0) stop(paste("No participants found for", country_name_))
+if (nrow(contacts) == 0) stop(paste("No contacts found for", country_name_))
 
 # Prepare data -------------
 contacts <- contacts %>% mutate(cnt_any = 1)
@@ -100,13 +105,14 @@ trunc_contacts <- contacts %>%
 
 # Create contacts with selected participant data
 byv <- c("country", "panel", "wave", "part_id", "part_age_group", "part_gender", "part_gender_nb")
-base_part <- part %>% select(byv)
+base_part <- part %>% select(all_of(byv))
 
 part_contacts <- merge(base_part, contacts, all.x = T)
-part_trunc_contacts <- merge(base_part, trunc_contacts, all.x = T)
+trunc_part_contacts <- merge(base_part, trunc_contacts, all.x = T)
 
 # Functions
 
 format_n <- function(n) {
   formatC(n, 1, format = "f")
 }
+
