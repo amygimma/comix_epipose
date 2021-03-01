@@ -153,7 +153,8 @@ part_summary_hh_size <- part %>%
 part_summary_display_age <- part_summary_age %>% 
   pivot_wider(id_cols = "part_age_group", names_from = "wave_id", values_from = "display", names_prefix = "Wave ") %>% 
   rename(Group = part_age_group) %>%
-  mutate(Category = "Age")
+  mutate(Category = "Age") %>%
+  arrange(Group)
 
 part_summary_display_gender <- part_summary_gender %>%
   pivot_wider(id_cols = "part_gender", names_from = "wave_id", values_from = "display", names_prefix = "Wave ") %>%
