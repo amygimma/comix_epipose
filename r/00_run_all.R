@@ -10,12 +10,16 @@ preset_variables <- TRUE
 
 # Group 1 countries
 g1 <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
-g2 <- c("Finland", "Lithuania", "Switzerland")
-countries <- c(g1)
-# Sample for single country
-# countries <- "Denmark"
+g1 <- c("Austria", "Denmark", "France", "Italy", "Poland")
 
-path_to_data <- "data"
+g2 <- c("Finland", "Greece", "Lithuania", "Switzerland")
+g2 <- c("Finland", "Lithuania", "Switzerland")
+
+countries <- c(g1, g2)
+# Sample for single country
+# countries <- "Belgium"
+
+path_to_data <- dir_data_clean
 truncate_contacts_n <- 50
 matrix_boots_n <- 1000
 
