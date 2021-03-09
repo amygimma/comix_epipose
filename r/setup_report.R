@@ -14,7 +14,7 @@ if (!exists("preset_variables")) preset_variables <- FALSE
 
 if (preset_variables == FALSE) {
   message("Setting data")
-  country_name_ <- "Switzerland"
+  country_name_ <- "Spain"
 
   path_to_data <- "data"
   path_to_data <- "~/../amygimma/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
@@ -54,6 +54,7 @@ map_eu_nations <- c(
   "dk" = "Denmark",
   "es" = "Spain",
   "fr" = "France",
+  "gr" = "Greece",
   "it" = "Italy",
   "pl" = "Poland",
   "pt" = "Portugal",
@@ -71,7 +72,7 @@ part_age_levs <- c("0-4", "5-11", "12-15", "16-17", "18-29", "30-39", "40-49",
 # data_files <- list.files(file.path(here::here(), path_to_data))
 country_code <- names(map_eu_nations[map_eu_nations == country_name_])
 data_files <- list.files(file.path(path_to_data), recursive = T)
-data_files <- grep(country_code, data_files, value = T)
+data_files <- grep(paste0(country_code, "_"), data_files, value = T)
 data_files <- grep("qs", data_files, value = T)
 data_files <- grep("archive|min", data_files, value = T, invert = T)
 
@@ -111,11 +112,12 @@ part <- qread(file.path(path_to_data, participants_file)) %>%
   mutate(country_name = map_eu_nations[country]) %>%
   filter(country_name == country_name_) %>%
   group_by(wave_id) %>%
-  mutate(round = group_indices()) %>%
-  ungroup(wave_id)
+  mutate(round = cur_group_id()) %>%
+  ungroup(wave_id) %>%
+  arrange(survey_round)
 
-
-
+wave_id_levs <- unique(part$wave_id)
+part <- part %>% mutate(wave_id = factor(wave_id, levels = wave_id_levs))
 # Read contacts data -----------
 # contacts_file <- grep("contact", data_files, value = T)
 # contacts_file <- "contacts_v4.qs"

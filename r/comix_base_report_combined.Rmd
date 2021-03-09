@@ -41,8 +41,9 @@ source(here::here("r", "setup_report.R"))
 <!-- ![](media/logo-EpiPose-header.jpg) -->
 <!-- {width=50px style="display: block; margin:0 auto;"} -->
 
-```{r header_png, out.width="120%"}
-knitr::include_graphics(here::here("media", "logo-EpiPose-header.png"))
+
+```{r header_png, out.width="40%"}
+knitr::include_graphics(here::here("media", "epipose_logo_rectangle.png"))
 ```
 
 # CoMix social contact survey: Report for `r country_name_` rounds 1 to `r max(part$round)`

@@ -5,19 +5,19 @@
   # variables in `r/00_run_all.R` file
 # If running with Knit button: Set country name and other variables below
 
-
+source("data/pull_data.R")
 preset_variables <- TRUE
 
 # Group 1 countries
 g1 <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
-g1 <- c("Austria", "Denmark", "France", "Italy", "Poland")
+# g1 <- c("Austria", "Denmark", "France", "Italy", "Poland")
 
 g2 <- c("Finland", "Greece", "Lithuania", "Switzerland")
-g2 <- c("Finland", "Lithuania", "Switzerland")
+# g2 <- c( "Greece")
 
-countries <- c(g1, g2)
+countries <- c("Spain")
 # Sample for single country
-# countries <- "Belgium"
+# countries <- "Denmark"
 
 path_to_data <- dir_data_clean
 truncate_contacts_n <- 50
