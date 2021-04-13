@@ -19,7 +19,7 @@ if (preset_variables == FALSE) {
   path_to_data <- "data"
   path_to_data <- "~/../amygimma/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
   truncate_contacts_n <- 50
-  matrix_boots_n <- 250
+  matrix_boots_n <- 50
 }
 
 
@@ -60,12 +60,15 @@ map_eu_nations <- c(
   "pt" = "Portugal",
   "lt" = "Lithuania",
   "ch" = "Switzerland",
-  "fi" = "Finland"
+  "fi" = "Finland",
+  "si" = "Slovenia"
 )
 
 # Age levels/labels for participants
-part_age_levs <- c("0-4", "5-11", "12-15", "16-17", "18-29", "30-39", "40-49",
-                "50-59", "60-69", "70+")
+# part_age_levs <- c("0-4", "5-11", "12-15", "16-17", "18-29", "30-39", "40-49",
+#                 "50-59", "60-69", "70+")
+part_age_levs <- c("0-4", "5-17", "18-29", "30-39", "40-49",
+                   "50-59", "60-69", "70+")
 
 # Read participants data ---------
 
@@ -84,11 +87,13 @@ part <- qread(file.path(path_to_data, participants_file)) %>%
   mutate(part_age_group =
            ifelse(part_age_group %in% c("Under 1", "1-4"), "0-4", part_age_group)) %>%
   mutate(part_age_group = ifelse(part_age_group == "70-120", "70+", part_age_group)) %>%
+  mutate(part_age_group = ifelse(part_age_group %in% c("5-11", "12-15", "16-17"), "5-17", part_age_group)) %>%
   mutate(part_age_est_min = case_when(
     part_age_group == "0-4" ~ 0,
-    part_age_group == "5-11" ~ 5,
-    part_age_group == "12-15" ~ 12,
-    part_age_group == "16-17" ~ 16,
+    # part_age_group == "5-11" ~ 5,
+    part_age_group == "5-17" ~ 5,
+    # part_age_group == "12-15" ~ 12,
+    # part_age_group == "16-17" ~ 16,
     part_age_group == "18-29" ~ 18,
     part_age_group == "30-39" ~ 30,
     part_age_group == "40-49" ~ 40,
@@ -98,9 +103,10 @@ part <- qread(file.path(path_to_data, participants_file)) %>%
   )) %>%
   mutate(part_age_est_max = case_when(
     part_age_group == "0-4" ~ 4,
-    part_age_group == "5-11" ~ 11,
-    part_age_group == "12-15" ~ 15,
-    part_age_group == "16-17" ~ 17,
+    # part_age_group == "5-11" ~ 11,
+    part_age_group == "5-17" ~ 17,
+    # part_age_group == "12-15" ~ 15,
+    # part_age_group == "16-17" ~ 17,
     part_age_group == "18-29" ~ 29,
     part_age_group == "30-39" ~ 39,
     part_age_group == "40-49" ~ 49,
@@ -115,6 +121,10 @@ part <- qread(file.path(path_to_data, participants_file)) %>%
   mutate(round = cur_group_id()) %>%
   ungroup(wave_id) %>%
   arrange(survey_round)
+
+if (country_name_ == "Spain") {
+  part[]
+}
 
 wave_id_levs <- unique(part$wave_id)
 part <- part %>% mutate(wave_id = factor(wave_id, levels = wave_id_levs))
@@ -142,9 +152,12 @@ contacts <- contacts %>% mutate(cnt_setting := factor(case_when(
   cnt_other == 1 ~ "Other")
 
 ))
-contacts <- contacts %>%
-  mutate(cnt_total_time = ifelse(is.na(cnt_total_time), "Unknown", cnt_total_time))
+table(contacts$cnt_total_time, useNA = "always")
 
+contacts <- contacts %>%
+  mutate(cnt_total_time = as.character(cnt_total_time)) %>%
+  mutate(cnt_total_time = ifelse(is.na(cnt_total_time), "Unknown", cnt_total_time))
+table(contacts$cnt_total_time, useNA = "always")
 setting_order <-  c("Home", "Work", "School", "Other")
 contacts <- contacts %>%
   mutate(cnt_setting = fct_relevel(cnt_setting, setting_order)) %>%

@@ -413,7 +413,7 @@ kable(contact_means_table) %>%
 
 ```{r contact_matrices, echo=FALSE}
 # Plot generated in `r/socialmixr_matrices.R`
-source(file.path(here::here(), "r", "socialmixr_matrices.R"))
+source(file.path(here::here(), "r", "socialmixr_matrices_adult.R"))
 
 cm_plot_all
 ```

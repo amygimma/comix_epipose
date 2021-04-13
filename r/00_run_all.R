@@ -6,18 +6,19 @@
 # If running with Knit button: Set country name and other variables below
 
 source("data/pull_data.R")
+# source("data/")
 preset_variables <- TRUE
 
 # Group 1 countries
-g1 <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
-# g1 <- c("Austria", "Denmark", "France", "Italy", "Poland")
+# g1 <- c("Austria", "Denmark", "France", "Italy") #, "Poland", "Portugal", "Spain")
+#
+# # g1 <- c("Austria", "Denmark", "France", "Italy", "Poland")
+#
+# g2 <- c("Finland", "Greece", "Lithuania", "Switzerland", "Slovenia")
 
-g2 <- c("Finland", "Greece", "Lithuania", "Switzerland")
-# g2 <- c( "Greece")
-
-countries <- c("Spain")
 # Sample for single country
 # countries <- "Denmark"
+countries <- c("Spain")
 
 path_to_data <- dir_data_clean
 truncate_contacts_n <- 50

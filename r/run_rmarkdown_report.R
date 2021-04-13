@@ -33,7 +33,7 @@ rmarkdown::render(file.path("r", rmd_filename),
                               paste("CoMix_Report_",
                                     country_name_, "_",
                                     format(Sys.time(), '%d-%b-%Y'),
-                                    ".html", sep="")))
+                                    "_v2.html", sep="")))
 
 message(paste("finished:", country_name_))
 

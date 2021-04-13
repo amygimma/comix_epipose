@@ -21,6 +21,8 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE )
 
 message(paste("params$country_name_:", params$country_name_))
 # Loads libraries and data
+library(RColorBrewer)
+library(ggthemes)
 library(here)
 here::here()
 
@@ -340,6 +342,8 @@ kable(cnt_summary_table) %>%
 <strong>Figure 4. Crude mean contacts by participant age group and wave.</strong>   Reported by all contacts and contacts truncated to 50 per participant per day.
 
 ```{r contact_means_plot, echo=FALSE, message = FALSE, warning = FALSE}
+wave_levels <- levels(unique(arrange(part_contacts, survey_round)$wave_id))
+
 
 all_mean <- part_contacts %>% 
   group_by(wave_id, part_id) %>%
@@ -383,19 +387,58 @@ contact_means_table <- contact_means %>%
   pivot_wider(id_cols = c("Contacts", "Participant age"), 
               names_from = "Wave", 
               values_from = "Mean contacts", 
-              names_prefix = "Wave ")
+              names_prefix = "Wave ") %>%
+  select(Contacts, "Participant age", paste("Wave", wave_levels))
 
-contact_means_ages <- contact_means %>% filter(`Participant age` != "All") %>%
-  mutate(Wave = paste("Wave", Wave))
+contact_means_ages <- contact_means %>% filter(`Participant age` != "All") %>%  
+  mutate(age_panel = case_when(
+    `Participant age` %in% c("0-4", "5-17") ~ "Children",
+    `Participant age` %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
+    `Participant age` %in% c("60-69", "70+") ~ "Older adults"
+  )) %>%
+  mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
+  mutate(Wave = factor(paste("Wave", Wave), levels = paste("Wave", wave_levels)))
+  
+ 
 
-ggplot(contact_means_ages, aes(x = `Participant age`, y = `Mean contacts`,
-                               fill = `Participant age`)) +
-  geom_col(position = "dodge") +
-  xlab("Partcipant age") +
-  facet_grid(rows = vars(Contacts), cols = vars(factor(Wave))) +
-  theme_bw() +
+# ggplot(contact_means_ages, aes(x = `Participant age`, y = `Mean contacts`,
+#                                fill = `Participant age`)) +
+#   geom_col(position = "dodge") +
+#   xlab("Partcipant age") +
+#   facet_grid(rows = vars(Contacts), cols = vars(factor(Wave))) +
+#   theme_bw() +
+#   ylab("Mean number of contacts") +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
+# contact_means_ages %>% filter(Contacts == "Truncated to 50 contacts/participant")
+
+ggplot(contact_means_ages, aes(x = factor(Wave), y = `Mean contacts`)) +
+  geom_line(aes(group = factor(`Participant age`), color = factor(`Participant age`)), alpha = 0.7) +
+  geom_point(aes(group = factor(`Participant age`), color = factor(`Participant age`)), alpha = 0.8) +
+  facet_grid(rows = vars(Contacts), cols = vars(age_panel), scales = "free_y") +
+  expand_limits(y = 0) +
+  scale_color_gdocs() +
+  xlab("Wave") +
   ylab("Mean number of contacts") +
+  labs(color = "Participant age") +
+  theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
+
+
+# ggplot(contact_means_ages, aes(x = Wave, y = `Mean contacts`,
+#                                fill = `Participant age`)) +
+#   geom_col(position = "dodge") +
+#   facet_grid(cols = vars(Contacts), rows = vars(`Participant age`), scales = "free") +
+#   # theme_bw() +
+#   expand_limits(y = 0) +
+#   scale_color_few() +
+#   xlab("Wave") +
+#   ylab("Mean number of contacts") +
+#   labs(color = "Participant age") +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3)) +
+#   theme_bw()
+
+
+
 ```
 
 <br/>
@@ -430,17 +473,42 @@ cm_plot_all
 
 <strong>Figure 6. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
-```{r adjusted_mean_figure, fig.height = 3, fig.width = 9}
+```{r adjusted_mean_figure, fig.height = 3, fig.width = 6}
+# 
+# ggplot(adj_mean_contacts_all, aes(y = mean_contacts, x = participant_age,
+#                               fill = participant_age)) +
+#   geom_col() +
+#   facet_grid(cols = vars(wave)) +
+#   xlab("Participant age") +
+#   ylab("Mean contacts") +
+#   labs(fill = "Participant age") +
+#   scale_fill_ptol() +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))
 
-ggplot(adj_mean_contacts_all, aes(y = mean_contacts, x = participant_age,
-                              fill = participant_age)) +
-  geom_col() +
-  facet_grid(cols = vars(wave)) + 
-  xlab("Participant age") +
-  ylab("Mean contacts") +
-  labs(fill = "Participant age") +
+adj_mean_contacts_all <- adj_mean_contacts_all %>% 
+  mutate(age_panel = case_when(
+    as.character(participant_age) %in% c("0-4", "5-11", "12-17") ~ "Children",
+    as.character(participant_age) %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
+    as.character(participant_age) %in% c("60-69", "70+") ~ "Older adults"
+  )) %>%
+   # mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
+  mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
+  mutate(panel = gsub("Wave|[0-9]", "", wave)) %>%
+  mutate(age_panel = as.character(age_panel))
+
+ggplot(adj_mean_contacts_all %>% filter(wavef != "Wave C1" & age_panel != "Children"), aes(x = factor(wavef), y = mean_contacts)) +
+    geom_point(aes(group = factor(participant_age), color = factor(participant_age)), alpha = 0.8) +
+
+  geom_line(aes(group = participant_age, color = participant_age), alpha = 0.7)  +
+  facet_grid(rows = vars(age_panel)) +
+  expand_limits(y = 0) +
+  scale_color_gdocs() +
+  xlab("Wave") +
+  ylab("Mean number of contacts") +
+  labs(color = "Participant age") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))
 
   
 ```
@@ -474,17 +542,63 @@ cm_plot_adult
 
 <strong>Figure 8. Combined contact means by wave.</strong> Contact means as calculated from symmetric, combined symmetric matrices. Adult survey waves each combined with the single round of data collection for children's contacts (wave C1) to provide an estimate of overall contacts. Children's contacts may have changed over time, especially depending on school attendence status. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
 
-```{r adjusted_mean_figure_adult, fig.height = 3, fig.width = 9}
+```{r adjusted_mean_figure_adult, fig.height = 3, fig.width = 6}
 
-ggplot(adj_mean_contacts_adult, aes(y = mean_contacts, x = participant_age,
-                              fill = participant_age)) +
-  geom_col() +
-  facet_grid(cols = vars(wave)) + 
-  xlab("Participant age") +
-  ylab("Mean contacts") +
-  labs(fill = "Participant age") +
+# ggplot(adj_mean_contacts_adult, aes(y = mean_contacts, x = participant_age,
+#                               fill = participant_age)) +
+#   geom_col() +
+#   facet_grid(cols = vars(wave)) + 
+#   xlab("Participant age") +
+#   ylab("Mean contacts") +
+#   labs(fill = "Participant age") +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
+adj_mean_contacts_adult <- adj_mean_contacts_adult %>% 
+  mutate(age_panel = case_when(
+    participant_age %in% c("0-4", "5-11", "12-17") ~ "Children",
+    participant_age %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
+    participant_age %in% c("60-69", "70+") ~ "Older adults"
+  )) %>%
+   mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
+  mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
+  mutate(panel = gsub("Wave|[0-9]", "", wave)) 
+
+# ggplot(adj_mean_contacts_adult, aes(x = factor(wavef), y = mean_contacts)) +
+#   geom_line(aes(group = factor(participant_age), color = factor(participant_age)), alpha = 0.7) +
+#   geom_point(aes(group = factor(participant_age), color = factor(participant_age)), alpha = 0.8) +
+#   facet_grid(rows = vars(panel), scales = "free_x") +
+#   expand_limits(y = 0) +
+#   scale_color_gdocs() +
+#   xlab("Wave") +
+#   ylab("Mean number of contacts") +
+#   labs(color = "Participant age") +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
+
+
+adj_mean_contacts_adult <- adj_mean_contacts_adult %>% 
+  mutate(age_panel = case_when(
+    as.character(participant_age) %in% c("0-4", "5-11", "12-17") ~ "Children",
+    as.character(participant_age) %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
+    as.character(participant_age) %in% c("60-69", "70+") ~ "Older adults"
+  )) %>%
+   # mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
+  mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
+  mutate(panel = gsub("Wave|[0-9]", "", wave)) %>%
+  mutate(age_panel = as.character(age_panel))
+
+ggplot(adj_mean_contacts_adult %>% filter(wavef != "Wave C1" & age_panel != "Children"), aes(x = factor(wavef), y = mean_contacts)) +
+    geom_point(aes(group = factor(participant_age), color = factor(participant_age)), alpha = 0.8) +
+
+  geom_line(aes(group = participant_age, color = participant_age), alpha = 0.7)  +
+  facet_grid(rows = vars(age_panel)) +
+  expand_limits(y = 0) +
+  scale_color_gdocs() +
+  xlab("Wave") +
+  ylab("Mean number of contacts") +
+  labs(color = "Participant age") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))
 
 
 # ggthemr::ggthemr("grape")
@@ -507,7 +621,7 @@ ggplot(adj_mean_contacts_adult, aes(y = mean_contacts, x = participant_age,
 
 <br/>
 
-<strong>Table 6. Adult participant to adult contact means by wave.</strong> Contact means as calculated from symmetric, adult particpant to adult contact symmetric matrices. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+<strong>Table 6.Participant contact means by wave.</strong> Contact means as calculated from symmetric, participant to contact symmetric matrices. Adult survey waves each combined with the single round of data collection for children's contacts (wave C1) to provide an estimate of overall contacts. Children's contacts may have changed over time, especially depending on school attendence status. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
 
 ```{r adjusted_mean_table_adult}
 kable(adj_mean_contacts_table_adult, digits = 2) %>% kable_styling(full_width = F, position = "left")
