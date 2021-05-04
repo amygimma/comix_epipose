@@ -19,7 +19,7 @@ RStudio also has built-in functionality for choosing between R versions, if nece
 1. Open this data repository as a project in RStudio by clicking `comix_epipose.Rproj`. 
 2. If needed, install the packages by copying and pasting the code below or running source(file.path("r", "install_packages.R")).
 3. Add your country's data in the `data` folder in the project directory.
-4. In the `r/00_run_all.R` file., set country name (to `countries`) and other variables (`path_to_data`, `truncate_contacts_n`, and `matrix_boots_n`). 
+4. In the `r/00_run_all.R` file., set country name (`countries`) and other variables (`path_to_data`, `truncate_contacts_n`, and `matrix_boots_n`). 
 5. Type `source("r/00_run_all.R")` into the R console from the project folder to create reports.
 6. Outputs will be saved to a directory called `outputs` and in a sub-directory of the country's name (for example, `outputs/Portugal`)
 
