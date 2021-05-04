@@ -4,7 +4,7 @@
 
 ### Instructions 
 
-#####
+
 
 This code was written in R version 4, please use this version to avoid difficulties. 
 
@@ -13,7 +13,7 @@ You can download the new version of R [here](https://www.r-project.org/).
 RStudio also has built-in functionality for choosing between R versions, if necessary, described [here](https://support.rstudio.com/hc/en-us/articles/200486138-Changing-R-versions-for-RStudio-desktop).
 
 
-##### Recommended workflow, run with `r/00_run_all.R` script
+#### Recommended workflow, run with `r/00_run_all.R` script
 
 Prep: If needed, install the packages by copying and pasting the code below or running source(file.path("r", "install_packages.R")).
 
