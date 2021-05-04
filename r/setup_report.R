@@ -14,7 +14,7 @@ if (!exists("preset_variables")) preset_variables <- FALSE
 
 if (preset_variables == FALSE) {
   message("Setting data")
-  country_name_ <- "Denmark"
+  country_name_ <- "Spain"
 
   path_to_data <- "data"
   path_to_data <- "~/../amygimma/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
