@@ -8,14 +8,18 @@
 #     of the country's name (for example, `outputs/Portugal`)
 
 source(file.path("r", "setup_report.R"))
-
+if(any(part$sample_type == "child")) {
+  rmd_filename <- "comix_base_report_combined.Rmd"
+} else {
+  rmd_filename <- "comix_base_report_adult_only.Rmd"
+}
 
 sub_folder_name <- file.path("outputs", country_name_)
 dir.create(sub_folder_name, recursive = T, showWarnings = F)
 
 message(paste("starting:", countryname_dict))
 
-rmarkdown::render(file.path("r", "comix_base_report.Rmd"),
+rmarkdown::render(file.path("r", rmd_filename),
                   params = list(
                     preset_variables = preset_variables,
                     country_name_ = country_name_,
@@ -29,7 +33,7 @@ rmarkdown::render(file.path("r", "comix_base_report.Rmd"),
                               paste("CoMix_Report_",
                                     country_name_, "_",
                                     format(Sys.time(), '%d-%b-%Y'),
-                                    ".html", sep="")))
+                                    "_v2.html", sep="")))
 
 message(paste("finished:", country_name_))
 
