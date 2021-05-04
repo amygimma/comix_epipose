@@ -50,4 +50,4 @@ vignettes/*.pdf
 .Renviron
 
 # Setup file
-r/setup_report.R
+r/00_run_all.R
