@@ -4,6 +4,7 @@ data/*
 *csv
 *.html
 *png
+!media/epipose_logo_rectangle.png
 *jpg
 *jpeg
 *qs
