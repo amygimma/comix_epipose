@@ -394,7 +394,7 @@ contact_means_ages <- contact_means %>% filter(`Participant age` != "All") %>%
   mutate(age_panel = case_when(
     `Participant age` %in% c("0-4", "5-17") ~ "Children",
     `Participant age` %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
-    `Participant age` %in% c("60-69", "70+") ~ "Older adults"
+    `Participant age` %in% c("60-69", "70+", "60+") ~ "Older adults"
   )) %>%
   mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
   mutate(Wave = factor(paste("Wave", Wave), levels = paste("Wave", wave_levels)))
@@ -490,7 +490,7 @@ adj_mean_contacts_all <- adj_mean_contacts_all %>%
   mutate(age_panel = case_when(
     as.character(participant_age) %in% c("0-4", "5-11", "12-17") ~ "Children",
     as.character(participant_age) %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
-    as.character(participant_age) %in% c("60-69", "70+") ~ "Older adults"
+    as.character(participant_age) %in% c("60-69", "70+", "60+") ~ "Older adults"
   )) %>%
    # mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
   mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
@@ -551,13 +551,13 @@ cm_plot_adult
 #   xlab("Participant age") +
 #   ylab("Mean contacts") +
 #   labs(fill = "Participant age") +
-#   theme_bw() +
+#   theme_bw() 
 #   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
 adj_mean_contacts_adult <- adj_mean_contacts_adult %>% 
   mutate(age_panel = case_when(
     participant_age %in% c("0-4", "5-11", "12-17") ~ "Children",
     participant_age %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
-    participant_age %in% c("60-69", "70+") ~ "Older adults"
+    participant_age %in% c("60-69", "70+", "60+") ~ "Older adults"
   )) %>%
    mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
   mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
@@ -580,7 +580,7 @@ adj_mean_contacts_adult <- adj_mean_contacts_adult %>%
   mutate(age_panel = case_when(
     as.character(participant_age) %in% c("0-4", "5-11", "12-17") ~ "Children",
     as.character(participant_age) %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
-    as.character(participant_age) %in% c("60-69", "70+") ~ "Older adults"
+    as.character(participant_age) %in% c("60-69", "70+", "60+") ~ "Older adults"
   )) %>%
    # mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
   mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
