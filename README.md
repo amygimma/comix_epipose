@@ -15,12 +15,13 @@ RStudio also has built-in functionality for choosing between R versions, if nece
 
 ##### Recommended workflow, run with `r/00_run_all.R` script
 
-1. Open this data repository as a project in RStudio by clicking `comix_epipose.Rproj`.
-2. If needed, install the packages by copying and pasting the code below or running source(file.path("r", "install_packages.R")).
-3. Add your country's data in the `data` folder in the project directory.
-4. Set country name and other variables in the `r/00_run_all.R` file. 
-5. Type `source("r/00_run_all.R")` into the R console from the project folder to create reports.
-6. Outputs will be saved to a directory called `outputs` and in a sub-directory of the country's name (for example, `outputs/Portugal`)
+Prep: If needed, install the packages by copying and pasting the code below or running source(file.path("r", "install_packages.R")).
+
+1. Open this data repository as a project in RStudio by clicking `comix_epipose.Rproj`. 
+2. Add your country's data in the `data` folder in the project directory.
+3. In the `r/00_run_all.R` file., set country name (to `countries`) and other variables (`path_to_data`, `truncate_contacts_n`, and `matrix_boots_n`). 
+4. Type `source("r/00_run_all.R")` into the R console from the project folder to create reports.
+5. Outputs will be saved to a directory called `outputs` and in a sub-directory of the country's name (for example, `outputs/Portugal`)
 
 \* If running with the `Knit` button in RStudio, clear workspace and set variables in the `r/setup_report.R` file. Output will be in the `r` folder.
 
