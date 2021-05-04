@@ -18,7 +18,7 @@ preset_variables <- TRUE
 
 # Sample for single country
 # countries <- "Denmark"
-countries <- c("Spain")
+countries <- c("Slovenia")
 
 path_to_data <- dir_data_clean
 truncate_contacts_n <- 50

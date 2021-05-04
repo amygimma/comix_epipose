@@ -14,7 +14,7 @@ if (!exists("preset_variables")) preset_variables <- FALSE
 
 if (preset_variables == FALSE) {
   message("Setting data")
-  country_name_ <- "Spain"
+  country_name_ <- "Denmark"
 
   path_to_data <- "data"
   path_to_data <- "~/../amygimma/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
@@ -122,8 +122,37 @@ part <- qread(file.path(path_to_data, participants_file)) %>%
   ungroup(wave_id) %>%
   arrange(survey_round)
 
-if (country_name_ == "Spain") {
-  part[]
+# Check for missing age groups
+adults <- part %>% filter(panel == "A")
+max_adult_wave <- max(adults$wave)
+
+age_counts <- adults %>%
+  count(wave, part_age_group) %>%
+  count(part_age_group) %>%
+  filter(n < max_adult_wave)
+
+
+if (nrow(age_counts) > 0) {
+  # if (isTRUE(age_counts$part_age_group == "70+")) {
+  #   # If missing age group is only 70+, set variable to TRUE
+  #   message("NOTICE: No participants in 70+ age group in at least one wave, regrouping to 60+")
+  #   age_limits_ <- c(0, 5, 11, 18, 30, 40, 50, 60, 120)
+  #   over_70_notice <- "Due to limitations in recruitment, the oldest age group is now 60 and over rather than 70 and over."
+  #   part[part_age_group %in% c("60-69", "70+"), part_age_group := "60+" ]
+  #   age_levs <- c("[0,5)", "[5,11)", "[11,18)", "[18,30)", "[30,40)", "[40,50)",
+  #                 "[50,60)", "[60,70)")
+  #   age_labels <- c("0-4", "5-11", "12-17", "18-29", "30-39", "40-49",
+  #                   "50-59", "60-69")
+  # } else {
+  #   # If missing age group is not only 70 +, throw error
+  #   stop("Missing age group under 70")
+  # }
+} else {
+  age_limits_ <- c(0, 5, 11, 18, 30, 40, 50, 60, 70, 120)
+  age_levs <- c("[0,5)", "[5,11)", "[11,18)", "[18,30)", "[30,40)", "[40,50)",
+                "[50,60)", "[60,70)", "70+")
+  age_labels <- c("0-4", "5-11", "12-17", "18-29", "30-39", "40-49",
+                  "50-59", "60-69", "70+")
 }
 
 wave_id_levs <- unique(part$wave_id)
@@ -204,5 +233,5 @@ tableau <- define_palette(
 )
 # set the theme for your figures:
 ggthemr(tableau)
-# Create plots with familiar tableau look
+# Create plots with tableau look
 
