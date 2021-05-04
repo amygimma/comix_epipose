@@ -48,3 +48,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Setup file
+r/setup_report.R
