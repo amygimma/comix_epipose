@@ -8,8 +8,11 @@
 #     of the country's name (for example, `outputs/Portugal`)
 
 source(file.path("r", "setup_report.R"))
-if(any(part$sample_type == "child")) {
-  rmd_filename <- "comix_base_report_combined.Rmd"
+max_parent_wave <- max(part[sample_type == "child"]$wave)
+if (max_parent_wave == 1) {
+  rmd_filename <- "comix_base_report_one_parent_wave.Rmd"
+} else if (max_parent_wave == 1) {
+  rmd_filename <- "comix_base_report_two_parent_waves.Rmd"
 } else {
   rmd_filename <- "comix_base_report_adult_only.Rmd"
 }
