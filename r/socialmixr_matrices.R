@@ -19,18 +19,17 @@ dir.create(sub_folder_name, recursive = T, showWarnings = F)
 
 # Simplify data -------------------
 cnt_sm <- trunc_contacts %>%
-  select("country", "panel", "wave", "wave_id", "part_id", "part_wave_uid", "cnt_age_est_min",
-         "cnt_age_est_max", "cnt_gender",
+  select("country", "panel", "wave", "wave_id", "part_id", "part_wave_uid",
+         "cnt_age_est_min", "cnt_age_est_max", "cnt_gender",
          "cnt_home", "cnt_work", "cnt_school", "weekday") %>%
   rename("dayofweek" = weekday) %>%
   group_by(part_wave_uid) %>%
   mutate(cont_wave_uid = paste(part_wave_uid, row_number(), sep = "-"))
 
 part_sm <- part %>%
-  select("country", "panel", "wave", "wave_id", "part_id", "part_wave_uid",  "part_age_est_min", "part_age_est_max","part_gender",
-         "hh_size") %>%
-  mutate(part_age = NA_integer_)
-
+  select("country", "panel", "wave", "wave_id", "part_id", "part_wave_uid",  "part_age_group",
+         "part_age_est_min", "part_age_est_max","part_gender",
+         "hh_size")
 
 # Set age limits -------------------
 # age_limits_ <- c(0, 5, 11, 18, 30, 40, 50, 60, 70, 120)
@@ -39,9 +38,9 @@ part_sm <- part %>%
 # age_labels <- c("0-4", "5-11", "12-17", "18-29", "30-39", "40-49",
 #                 "50-59", "60-69", "70+")
 
-table(part$part_age_group)
 age_map <- age_labels
 names(age_map) <- age_levs
+table(part$part_age_group, useNA = "always")
 
 
 # Get population data -------------------
@@ -91,12 +90,16 @@ for(wave_id_ in unique(part$wave_id)) {
 }
 
 cm_dfs <- rbindlist(wave_cm_dfs)
-table(cm_dfs$participant_age)
+table(cm_dfs$participant_age, useNA = "always")
+table(cm_dfs$contact_age, useNA = "always")
+
 cm_dfs <- cm_dfs %>%
   mutate(wave = paste("Wave", wave_id),
          participant_age = factor(participant_age, levels = age_levs, labels = age_labels),
          contact_age = factor(contact_age, levels = age_levs, labels = age_labels))
 
+table(cm_dfs$participant_age, useNA = "always")
+table(cm_dfs$contact_age, useNA = "always")
 write.csv(format(cm_dfs),
           file.path(sub_folder_name, "cm_all_contacts_weighted_day.csv"),
           row.names = FALSE)
@@ -204,9 +207,10 @@ for(wave_id_ in unique(part_sm_adult$wave_id)) {
 cm_dfs_adult <- rbindlist(wave_cm_dfs_adult)
 mean_contacts_adult_df <- rbindlist(mean_contacts_split_waves)
 
+max_age_length <- length(age_labels)
 cm_dfs_adult <- cm_dfs_adult %>%
   mutate(wave = paste("Wave", wave),
-         participant_age = factor(participant_age, levels = 1:9, labels = age_labels),
+         participant_age = factor(participant_age, levels = 1:max_age_length , labels = age_labels),
          contact_age = factor(contact_age, levels = age_levs, labels = age_labels))
 table(cm_dfs_adult$participant_age)
 

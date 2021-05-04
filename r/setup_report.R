@@ -133,20 +133,25 @@ age_counts <- adults %>%
 
 
 if (nrow(age_counts) > 0) {
-  # if (isTRUE(age_counts$part_age_group == "70+")) {
-  #   # If missing age group is only 70+, set variable to TRUE
-  #   message("NOTICE: No participants in 70+ age group in at least one wave, regrouping to 60+")
-  #   age_limits_ <- c(0, 5, 11, 18, 30, 40, 50, 60, 120)
-  #   over_70_notice <- "Due to limitations in recruitment, the oldest age group is now 60 and over rather than 70 and over."
-  #   part[part_age_group %in% c("60-69", "70+"), part_age_group := "60+" ]
-  #   age_levs <- c("[0,5)", "[5,11)", "[11,18)", "[18,30)", "[30,40)", "[40,50)",
-  #                 "[50,60)", "[60,70)")
-  #   age_labels <- c("0-4", "5-11", "12-17", "18-29", "30-39", "40-49",
-  #                   "50-59", "60-69")
-  # } else {
-  #   # If missing age group is not only 70 +, throw error
-  #   stop("Missing age group under 70")
-  # }
+  if (isTRUE(age_counts$part_age_group == "70+")) {
+    # If missing age group is only 70+, set variable to TRUE
+    message("NOTICE: No participants in 70+ age group in at least one wave, regrouping to 60+")
+    age_limits_ <- c(0, 5, 18, 30, 40, 50, 60, 120)
+    over_70_notice <- "Due to limitations in recruitment, the oldest age group is now 60 and over rather than 70 and over."
+    age_levs <- c("[0,5)", "[5,18)", "[18,30)", "[30,40)", "[40,50)",
+                  "[50,60)", "60+")
+    age_labels <- c("0-4", "5-17", "18-29", "30-39", "40-49",
+                    "50-59", "60+")
+    part <- part %>%
+      mutate(part_age_group =
+               ifelse(part_age_group %in% c("60-69", "70+"), "60+",
+                      as.character(part_age_group)))%>%
+      mutate(part_age_group = factor(part_age_group, levels = age_labels))
+
+  } else {
+    # If missing age group is not only 70 +, throw error
+    stop("Missing age group under 70")
+  }
 } else {
   age_limits_ <- c(0, 5, 11, 18, 30, 40, 50, 60, 70, 120)
   age_levs <- c("[0,5)", "[5,11)", "[11,18)", "[18,30)", "[30,40)", "[40,50)",
