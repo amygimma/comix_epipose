@@ -5,8 +5,6 @@
   # variables in `r/00_run_all.R` file
 # If running with Knit button: Set country name and other variables below
 
-source("data/pull_data.R")
-# source("data/")
 preset_variables <- TRUE
 
 # Group 1 countries
