@@ -10,13 +10,12 @@
 source(file.path("r", "setup_report.R"))
 parent_waves <- part %>% filter(sample_type == "child")
 max_parent_wave <- max(parent_waves$wave)
-if (max_parent_wave == 1) {
-  rmd_filename <- "comix_base_report_one_parent_wave.Rmd"
-# } else if (max_parent_wave == 2) {
-  # Work in progress
-#   rmd_filename <- "comix_base_report_two_parent_waves.Rmd"
-} else {
+if (max_parent_wave == 0) {
   rmd_filename <- "comix_base_report_adult_only.Rmd"
+} else if (max_parent_wave == 2) {
+  rmd_filename <- "comix_base_report_two_parent_waves.Rmd"
+} else if (max_parent_wave == 1) {
+  rmd_filename <- "comix_base_report_one_parent_wave.Rmd"
 }
 
 sub_folder_name <- file.path("outputs", country_name_)

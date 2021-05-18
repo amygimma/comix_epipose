@@ -99,7 +99,7 @@ kable(t(timetable)) %>%
 
 <strong>Figure 1: Survey responses by date.</strong>
 
-```{r response_day_participants, fig.height=4, fig.width=6}
+```{r response_day_participants, fig.height=4, fig.width=10}
 
 obs_per_date <- part %>% 
   count(wave_id, survey_date) %>%
@@ -212,7 +212,7 @@ kable(full_summary) %>%
 
 <strong>Figure 2. Proportion of contacts by setting and wave.</strong> A) All contacts (both individually-reported and reported in aggregated contact questions); B) individually-reported contacts only.
 
-```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
+```{r contact_setting, echo = FALSE, fig.width = 10, fig.height = 4}
 
 setting_all <- ggplot(
   contacts, 
@@ -269,7 +269,7 @@ cnt_summary_setting <- contacts %>%
 
 <strong>Figure 3. Proportion of contacts by duration of contact and wave.</strong> A) All individually-reported contacts; B) individually-reported contacts, excluding the participant's household members.
 
-```{r contact_duration, echo = FALSE, fig.width = 7, fig.height = 4}
+```{r contact_duration, echo = FALSE, fig.width = 10, fig.height = 4}
 
 total_time_all <- ggplot(
   contacts %>% filter(cnt_mass == "individual"), 
@@ -473,7 +473,7 @@ cm_plot_all
 
 <strong>Figure 6. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
-```{r adjusted_mean_figure, fig.height = 3, fig.width = 6}
+```{r adjusted_mean_figure, fig.height = 3, fig.width = 10}
 # 
 # ggplot(adj_mean_contacts_all, aes(y = mean_contacts, x = participant_age,
 #                               fill = participant_age)) +
@@ -542,7 +542,7 @@ cm_plot_adult
 
 <strong>Figure 8. Combined contact means by wave.</strong> Contact means as calculated from symmetric, combined symmetric matrices. Adult survey waves each combined with the single round of data collection for children's contacts (wave C1) to provide an estimate of overall contacts. Children's contacts may have changed over time, especially depending on school attendence status. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
 
-```{r adjusted_mean_figure_adult, fig.height = 3, fig.width = 6}
+```{r adjusted_mean_figure_adult, fig.height = 3, fig.width = 10}
 
 # ggplot(adj_mean_contacts_adult, aes(y = mean_contacts, x = participant_age,
 #                               fill = participant_age)) +

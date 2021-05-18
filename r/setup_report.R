@@ -14,10 +14,10 @@ if (!exists("preset_variables")) preset_variables <- FALSE
 
 if (preset_variables == FALSE) {
   message("Setting data")
-  country_name_ <- "Spain"
+  #country_name_ <- "Austria"
 
   path_to_data <- "data"
-  path_to_data <- "~/../amygimma/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
+  #path_to_data <- "C:/Users/kw/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
   truncate_contacts_n <- 50
   matrix_boots_n <- 50
 }
@@ -41,12 +41,11 @@ library(socialmixr)
 library(reshape2)
 library(countrycode)
 
-if (!grepl("~/|C:/", path_to_data)) path_to_data <- here::here(path_to_data)
+#if (!grepl("~/|C:/", path_to_data)) path_to_data <- here::here(path_to_data)
 
 # library(flextable)
 here::here()
 # ggthemr::ggthemr("grape")
-
 
 map_eu_nations <- c(
   "at" =  "Austria",
@@ -61,8 +60,12 @@ map_eu_nations <- c(
   "lt" = "Lithuania",
   "ch" = "Switzerland",
   "fi" = "Finland",
-  "si" = "Slovenia"
+  "si" = "Slovenia",
+  "sk" = "Slovakia",
+  "ee" = "Estonia",
+  "hr" = "Hungary"
 )
+
 
 # Age levels/labels for participants
 # part_age_levs <- c("0-4", "5-11", "12-15", "16-17", "18-29", "30-39", "40-49",
@@ -116,11 +119,24 @@ part <- qread(file.path(path_to_data, participants_file)) %>%
   )) %>%
   mutate(part_age_group = factor(part_age_group, levels = part_age_levs)) %>%
   mutate(country_name = map_eu_nations[country]) %>%
+  mutate(went_to_school = case_when(panel == "A" ~ "Adult",
+                                    part_attend_school_yesterday=="Yes" ~ "Yes",
+                                    part_attend_school_yesterday %in% c("Don’t know", "Prefer not to answer") ~ "NA",
+                                    panel == "C" & is.na(part_attend_school_yesterday) ~ "NA",
+                                    !part_attend_school_yesterday %in% c("Adult", "Yes", "NA") ~ "No")) %>%
+  mutate(wave_sch_id = paste0(panel, wave, " ", went_to_school)) %>%
   filter(country_name == country_name_) %>%
   group_by(wave_id) %>%
   mutate(round = cur_group_id()) %>%
   ungroup(wave_id) %>%
   arrange(survey_round)
+
+part <- part %>%
+  mutate(part_attend_school_yesterday = ifelse(part_attend_school_yesterday == "Not applicable as it was a weekend/holiday/day off", "No, it was a weekend/holiday/day off", part_attend_school_yesterday)) %>%
+  mutate(part_attend_school_yesterday = ifelse(part_attend_school_yesterday == "Not applicable as it was closed", "No, it was closed", part_attend_school_yesterday)) %>%
+  mutate(part_attend_school_yesterday = ifelse(went_to_school == "NA", "NA", part_attend_school_yesterday)) %>%
+  mutate(went_to_school = ifelse(panel == "A", "", went_to_school))
+
 
 # Check for missing age groups
 adults <- part %>% filter(panel == "A")
@@ -130,7 +146,6 @@ age_counts <- adults %>%
   count(wave, part_age_group) %>%
   count(part_age_group) %>%
   filter(n < max_adult_wave)
-
 
 if (nrow(age_counts) > 0) {
   if (isTRUE(age_counts$part_age_group == "70+")) {
@@ -162,6 +177,10 @@ if (nrow(age_counts) > 0) {
 
 wave_id_levs <- unique(part$wave_id)
 part <- part %>% mutate(wave_id = factor(wave_id, levels = wave_id_levs))
+
+wave_sch_id_levs <- unique(part$wave_sch_id)
+part <- part %>% mutate(wave_sch_id = factor(wave_sch_id, levels = wave_sch_id_levs))
+
 # Read contacts data -----------
 # contacts_file <- grep("contact", data_files, value = T)
 # contacts_file <- "contacts_v4.qs"
@@ -197,10 +216,16 @@ contacts <- contacts %>%
   mutate(cnt_setting = fct_relevel(cnt_setting, setting_order)) %>%
   mutate(wave_id = paste0(panel, wave))
 
+contacts <- contacts %>% mutate(wave_id = factor(wave_id, levels = wave_id_levs))
+
 part_ages <- part %>% select(country, panel, wave, part_id, part_age_group)
 contacts <- left_join(contacts, part_ages,
                       by = c("country", "panel", "wave", "part_id"))
 
+part_went_to_school <- part %>% select(country, panel, wave, part_id,
+                                       went_to_school, part_attend_school_yesterday, wave_sch_id)
+contacts <- left_join(contacts, part_went_to_school,
+                      by = c("country", "panel", "wave", "part_id"))
 
 trunc_contacts <- contacts %>%
   arrange(cnt_setting) %>%
@@ -208,13 +233,20 @@ trunc_contacts <- contacts %>%
   slice(1:truncate_contacts_n) %>%
   ungroup()
 
-
 # Create contacts with selected participant data
-byv <- c("country", "panel", "wave", "wave_id", "part_id", "part_age_group")
+byv <- c("country", "panel", "wave", "wave_id", "part_id", "part_age_group", "wave_sch_id")
 base_part <- part %>% select(all_of(byv))
 
 part_contacts <- merge(base_part, contacts, all.x = T, by = byv)
 trunc_part_contacts <- merge(base_part, trunc_contacts, all.x = T)
+
+# Create contacts with child sample, separate went to school or not
+byv_school <- c("country", "panel", "wave", "wave_id", "part_id", "part_age_group",
+                "went_to_school", "wave_sch_id")
+child_part <- part %>% filter(panel == "C") %>%  select(all_of(byv_school))
+child_part_contacts <- merge(child_part, contacts, all.x = T, by = byv)
+
+trunc_child_part_contacts <- merge(child_part, trunc_contacts, all.x = T)
 
 # Functions
 
