@@ -16,10 +16,10 @@ if (preset_variables == FALSE) {
   message("Setting data")
   #country_name_ <- "Austria"
 
-  path_to_data <- "data"
+  #path_to_data <- "data"
   #path_to_data <- "C:/Users/kw/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
   truncate_contacts_n <- 50
-  matrix_boots_n <- 50
+  matrix_boots_n <- 1000
 }
 
 
@@ -124,7 +124,8 @@ part <- qread(file.path(path_to_data, participants_file)) %>%
                                     part_attend_school_yesterday %in% c("Don’t know", "Prefer not to answer") ~ "NA",
                                     panel == "C" & is.na(part_attend_school_yesterday) ~ "NA",
                                     !part_attend_school_yesterday %in% c("Adult", "Yes", "NA") ~ "No")) %>%
-  mutate(wave_sch_id = paste0(panel, wave, " ", went_to_school)) %>%
+  mutate(wave_sch_id = paste0(panel, wave, ": ", went_to_school)) %>%
+  mutate(wave_sch_id = stringr::str_replace_all(wave_sch_id, ': Adult', '')) %>%
   filter(country_name == country_name_) %>%
   group_by(wave_id) %>%
   mutate(round = cur_group_id()) %>%
@@ -179,7 +180,9 @@ wave_id_levs <- unique(part$wave_id)
 part <- part %>% mutate(wave_id = factor(wave_id, levels = wave_id_levs))
 
 wave_sch_id_levs <- unique(part$wave_sch_id)
-part <- part %>% mutate(wave_sch_id = factor(wave_sch_id, levels = wave_sch_id_levs))
+part <- part %>% mutate(wave_sch_id = factor(wave_sch_id,
+                                             levels = c("C1: Yes", "C1: No",
+                                                        "C2: Yes", "C2: No")))
 
 # Read contacts data -----------
 # contacts_file <- grep("contact", data_files, value = T)
