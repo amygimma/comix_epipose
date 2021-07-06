@@ -14,12 +14,12 @@ if (!exists("preset_variables")) preset_variables <- FALSE
 
 if (preset_variables == FALSE) {
   message("Setting data")
-  country_name_ <- "Spain"
+  #country_name_ <- "Spain"
 
-  path_to_data <- "data"
-  path_to_data <- "~/../amygimma/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
+  #path_to_data <- "data"
+  #path_to_data <- "~/../amygimma/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
   truncate_contacts_n <- 50
-  matrix_boots_n <- 50
+  matrix_boots_n <- 1000
 }
 
 
@@ -61,7 +61,12 @@ map_eu_nations <- c(
   "lt" = "Lithuania",
   "ch" = "Switzerland",
   "fi" = "Finland",
-  "si" = "Slovenia"
+  "si" = "Slovenia",
+  "hu" = "Hungary",
+  "sk" = "Slovakia",
+  "hr" = "Croatia",
+  "ee" = "Estonia",
+  "mt" = "Malta"
 )
 
 # Age levels/labels for participants
