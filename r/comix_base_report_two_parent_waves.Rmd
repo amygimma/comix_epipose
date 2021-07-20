@@ -786,7 +786,7 @@ cm_plot_adult <- ggarrange(cm_plot_adult_s3, cm_plot_adult_s4,
           cm_plot_adult_c1, cm_plot_adult_c2,
           common.legend = TRUE, legend = "bottom", font.label = list(size = 20))
 annotate_figure(cm_plot_adult,
-                bottom = text_grob("NA and contacts <0.01 are shown in blank", 
+                bottom = text_grob("NA and contacts <0.01 are shown in black", 
                                    hjust=1, x=1, size=20))
 
 ```
