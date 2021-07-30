@@ -63,7 +63,9 @@ map_eu_nations <- c(
   "si" = "Slovenia",
   "sk" = "Slovakia",
   "ee" = "Estonia",
-  "hr" = "Hungary"
+  "hu" = "Hungary",
+  "hr" = "Croatia",
+  "mt" = "Malta"
 )
 
 
