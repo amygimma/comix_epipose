@@ -8,6 +8,11 @@
 #     of the country's name (for example, `outputs/Portugal`)
 
 source(file.path("r", "setup_report.R"))
+
+part <- part %>% filter(wave_id!="D1")
+contacts <- contacts %>% filter(wave_id!="D1")
+part_contacts <- part_contacts %>% filter(wave_id!="D1")
+
 parent_waves <- part %>% filter(sample_type == "child")
 max_parent_wave <- max(parent_waves$wave)
 if (max_parent_wave == 0) {
