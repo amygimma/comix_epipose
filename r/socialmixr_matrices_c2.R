@@ -146,8 +146,8 @@ adj_mean_contacts_table_all <- adj_mean_contacts_all %>%
 #  Scenario 1: Combine adults with wave C1 only--------------------------
 wave_cm_dfs_adult_c1 <- list()
 mean_contacts_split_waves <- list()
-part_sm_adult_c1 <- part_sm %>% filter(panel != "C")
-cnt_sm_adult_c1 <- cnt_sm %>% filter(panel != "C")
+part_sm_adult_c1 <- part_sm %>% filter(panel %in% c("A","B"))
+cnt_sm_adult_c1 <- cnt_sm %>% filter(panel %in% c("A","B"))
 
 for(wave_id_ in unique(part_sm_adult_c1$wave_id)) {
   p_filt <- part_sm %>% filter(wave_id %in% c(wave_id_, "C1"))
@@ -227,8 +227,8 @@ adj_mean_contacts_table_adult_c1 <- adj_mean_contacts_adult_c1 %>%
 #  Scenario 2: Combine adults with wave C2 only --------------------------
 wave_cm_dfs_adult_c2 <- list()
 mean_contacts_split_waves <- list()
-part_sm_adult_c2 <- part_sm %>% filter(panel != "C")
-cnt_sm_adult_c2 <- cnt_sm %>% filter(panel != "C")
+part_sm_adult_c2 <- part_sm %>% filter(panel %in% c("A","B"))
+cnt_sm_adult_c2 <- cnt_sm %>% filter(panel %in% c("A","B"))
 
 for(wave_id_ in unique(part_sm_adult_c2$wave_id)) {
   p_filt <- part_sm %>% filter(wave_id %in% c(wave_id_, "C2"))
@@ -308,8 +308,8 @@ adj_mean_contacts_table_adult_c2 <- adj_mean_contacts_adult_c2 %>%
 #  Scenario 3: Combine adults with children who went to school
 wave_cm_dfs_adult_s3 <- list()
 mean_contacts_split_waves <- list()
-part_sm_adult_s3 <- part_sm %>% filter(panel != "C")
-cnt_sm_adult_s3 <- cnt_sm %>% filter(panel != "C")
+part_sm_adult_s3 <- part_sm %>% filter(panel %in% c("A","B"))
+cnt_sm_adult_s3 <- cnt_sm %>% filter(panel %in% c("A","B"))
 
 for(wave_id_ in unique(part_sm_adult_s3$wave_id)) {
   p_filt <- part_sm %>% filter(wave_id %in% c(wave_id_) | went_to_school == "Yes")
@@ -391,8 +391,8 @@ adj_mean_contacts_table_adult_s3 <- adj_mean_contacts_adult_s3 %>%
 #  Scenario 4: Combine adults with children who did not attend school
 wave_cm_dfs_adult_s4 <- list()
 mean_contacts_split_waves <- list()
-part_sm_adult_s4 <- part_sm %>% filter(panel != "C")
-cnt_sm_adult_s4 <- cnt_sm %>% filter(panel != "C")
+part_sm_adult_s4 <- part_sm %>% filter(panel %in% c("A","B"))
+cnt_sm_adult_s4 <- cnt_sm %>% filter(panel %in% c("A","B"))
 
 for(wave_id_ in unique(part_sm_adult_s4$wave_id)) {
   p_filt <- part_sm %>% filter(wave_id %in% c(wave_id_) | went_to_school == "No")
