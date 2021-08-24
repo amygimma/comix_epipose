@@ -559,7 +559,7 @@ kable(cnt_summary_table) %>%
 <strong>Figure 4. Crude mean contacts by participant age group and wave.</strong>   Reported by all contacts and contacts truncated to 50 per participant per day.
 
 ```{r contact_means_plot, echo=FALSE, message = FALSE, warning = FALSE, fig.width = 14, fig.height = 8}
-wave_levels <- levels(unique(arrange(part_contacts, survey_round)$wave_id))
+wave_levels <- levels(unique(arrange(part_contacts %>% filter(panel!="D"), survey_round)$wave_id))
 
 all_mean <- part_contacts %>% 
   group_by(wave_id, part_id) %>%
@@ -648,6 +648,8 @@ contact_means <- rbindlist(list(all_mean, all_mean_sch,
   rename(Wave = wave_id) %>%
   mutate("Mean contacts"= round(`Mean contacts`, 2)) %>%
   select("Wave", "Contacts", "Participant age", "Mean contacts", "went_to_school") 
+
+contact_means <- contact_means %>% filter(Wave != "D1")
 
 contact_means_table <- contact_means %>%
   mutate(went_to_school = ifelse(!Wave %in% c("C1", "C2"), "", went_to_school)) %>% 
