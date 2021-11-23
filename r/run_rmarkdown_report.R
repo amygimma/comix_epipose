@@ -9,18 +9,20 @@
 
 source(file.path("r", "setup_report.R"))
 
-part <- part %>% filter(wave_id!="D1")
-contacts <- contacts %>% filter(wave_id!="D1")
-part_contacts <- part_contacts %>% filter(wave_id!="D1")
+# part <- part %>% filter(wave_id!="D1")
+# contacts <- contacts %>% filter(wave_id!="D1")
+# part_contacts <- part_contacts %>% filter(wave_id!="D1")
 
 parent_waves <- part %>% filter(sample_type == "child")
-max_parent_wave <- max(parent_waves$wave)
+max_parent_wave <- uniqueN(parent_waves$survey_round)
 if (max_parent_wave == 0) {
   rmd_filename <- "comix_base_report_adult_only.Rmd"
 } else if (max_parent_wave == 2) {
   rmd_filename <- "comix_base_report_two_parent_waves.Rmd"
 } else if (max_parent_wave == 1) {
   rmd_filename <- "comix_base_report_one_parent_wave.Rmd"
+} else if (max_parent_wave == 3) {
+  rmd_filename <- "comix_base_report_three_parent_waves.Rmd"
 }
 
 sub_folder_name <- file.path("outputs", country_name_)

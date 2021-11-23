@@ -298,7 +298,7 @@ B. individually-reported contacts only.
 
 ```{r contact_setting, echo = FALSE, fig.width = 12, fig.height = 5}
 contacts <- contacts %>% 
-  mutate(barw = case_when(panel=="A" ~ 3, panel == "C" ~ 1))
+  mutate(barw = case_when(panel %in% c("A","B") ~ 3, panel %in% c("C", "D") ~ 1))
 
 setting_all <- ggplot(
   contacts %>% filter(panel %in% c("A","B")), 
@@ -854,7 +854,7 @@ adj_mean_contacts_adult_s4$from <- "s4"
 
 adj_mean_contacts_adult <- rbind(adj_mean_contacts_adult_s3, adj_mean_contacts_adult_s4)
 
-ggplot(adj_mean_contacts_adult %>% filter(panel == " A" & age_panel %in% c("Adults", "Older adults")),
+ggplot(adj_mean_contacts_adult %>% filter(panel %in% c(" A", " B") & age_panel %in% c("Adults", "Older adults")),
        aes(x = factor(wavef), y = mean_contacts, group = from, color = from)) +
   geom_point(alpha = 0.8) +
   geom_line(alpha = 0.8)  +
