@@ -8,23 +8,28 @@
 preset_variables <- TRUE
 
 # Group 1 countries
-# g1 <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
+g1 <- c("Austria", "Denmark", "France", "Italy", "Poland", "Portugal", "Spain")
 #
 # Group 2 countries
-# g2 <- c("Finland", "Greece", "Lithuania", "Switzerland", "Slovenia")
+g2 <- c("Finland", "Greece", "Lithuania", "Switzerland", "Slovenia")
+# Group 3 countries
+#
+g3 <- c("Hungary", "Slovakia", "Estonia")
 
 # Sample for single country
 # countries <- c("Spain")
 
-countries <- SET_VARIABLE_SEE_INSTRUCTIONS_ABOVE
+countries <- c(g1,g2,g3)
+countries <- "Hungary"
 
-path_to_data <- SET_VARIABLE_SEE_INSTRUCTIONS_ABOVE
+path_to_data <- "C:/Users/kw/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
 truncate_contacts_n <- 50
-matrix_boots_n <- 1000
+matrix_boots_n <- 50
 
 
 for (country in countries) {
   country_name_ <- country
+  country_name_ <- "Hungary"
 
   source(file.path("r", "run_rmarkdown_report.R"))
 }

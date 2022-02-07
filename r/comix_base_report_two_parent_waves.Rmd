@@ -23,7 +23,12 @@ message(paste("params$country_name_:", params$country_name_))
 # Loads libraries and data
 library(RColorBrewer)
 library(ggthemes)
+library(ggpubr)
 library(here)
+library(gridExtra)
+library(viridis)
+library(ggh4x)
+library(stringr)
 here::here()
 
 # Read params, if set (no aftion if not)
@@ -38,6 +43,11 @@ if (!is.null(params$truncate_contacts_n)) {
 if (!is.null(params$matrix_boots_n)) matrix_boots_n <- params$matrix_boots_n
 
 source(here::here("r", "setup_report.R"))
+part <- part %>% filter(wave_id!="D1")
+contacts <- contacts %>% filter(wave_id!="D1")
+part_contacts <- part_contacts %>% filter(wave_id!="D1")
+
+
 
 ```
 <!-- ![](media/logo-EpiPose-header.jpg) -->
@@ -61,25 +71,32 @@ Created as part of the EpiPose project, funded by the EU Horizon 2020 Research a
 
 ### Introduction & Methods
 
-<br/>
 
-CoMix is a behavioural survey, first launched on 24th of March 2020 in the UK, and launched in `r country_name_` on `r format(min(part$survey_date), "%d of %B %Y")`. The sample is broadly representative of the adult population in `r country_name_`. Participant’s are invited to respond to the survey approximately once every two weeks. In two waves, parents will complete the survey on behalf of a child in their household (17 years old or younger). Participants record direct, face-to-face contacts made on the previous day, specifying certain characteristics for each contact including the age and sex of the contact, whether contact was physical (skin-to-skin contact), and where contact occurred (e.g. at home, work, while undertaking leisure activities, etc). Participants are instructed to report contacts individually, but are also given the opportunity to report aggregated estimates of contacts by age group and setting in case they did not list all contacts individually. Further details have been published elsewhere[1,2]. The contact survey is based on the POLYMOD contact survey[3]. 
+CoMix is a behavioural survey, first launched on 24 March 2020 in the UK, and launched in `r country_name_` on `r format(min(part$survey_date), "%d %B %Y")`. The sample is broadly representative of the adult population in `r country_name_`. Participants are invited to respond to the survey approximately once every two weeks. This report presents the results from `r length(unique(part[part$panel=="A" | part$panel=="B",]$wave_id))` waves of adult data and `r length(unique(part[part$panel=="C" | part$panel=="D",]$wave_id))` waves of children data. The children data was collected by having  parents to complete the survey on behalf of a child in their household (aged 17 years or less). Participants record direct, face-to-face contacts made on the previous day, specifying certain characteristics for each contact including the age and sex of the contact, whether contact was physical (skin-to-skin contact), and where contact occurred (e.g. at home, work, while undertaking leisure activities, etc). Participants are instructed to report contacts individually, but are also given the opportunity to report aggregated estimates of the contacts made by age group and setting, in case they did not list all contacts individually. Further details have been published elsewhere[1,2]. The contact survey is based on the POLYMOD contact survey[3]. 
 
 We calculated and plotted the crude mean number of contacts by setting, duration, and participant to contact age groups. We used the settings home, work and school (including all educational establishments, including childcare, nurseries and universities and colleges), and “other”  (mostly leisure and social contacts, but includes shopping), and report . We look at the mean contacts by age and survey wave. The mean number of contacts is influenced by a few individuals who report very high numbers of contacts (often in a work context). We show means for all contacts and means number of contacts after truncating the maximum number of contacts recorded at 50 per individual per day.
 
-We calculated the mean contacts for the contact matrices by using the socialmixr R package [4], with `r matrix_boots_n` bootstrapped samples. We used the World Population Prospect data from 2015 for country specific population estimates  by age and gender, which is the latest available data in the socialmixr package. We constructed age-stratified contact matrices for nine age-groups (0-4, 5-11, 12-17, 18-29, 30-39, 40-49, 50-59, 60-69, and 70+). For contacts, we do not have exact ages and therefore sampled from the reported age-group. The first round of data collected for children's contacts (Panel C, Wave 1) has been used to complete symmetric contact matrices in all previous waves. Children's contacts may have changed over time, especially depending on school attendence status, so this should be considered if there have been changes throughout the survey period.
+We calculated the mean contacts for the contact matrices by using the socialmixr R package [4], with `r matrix_boots_n` bootstrapped samples. We used the World Population Prospect data from 2015 for country specific population estimates  by age and gender, which is the latest available data in the socialmixr package. We constructed age-stratified contact matrices for nine age-groups (0-4, 5-11, 12-17, 18-29, 30-39, 40-49, 50-59, 60-69, and 70+). For contacts, we do not have exact ages and therefore sampled from the reported age-group. 
 
- <br/>
+To complete the symmetric contact matrices that capture contacts by both adults and children, we combined each wave of the adult data with <br>
+- children who attended school, <br>
+- children who did not attend school, <br>
+- Wave C1, and <br>
+- Wave C2. <br>
+The first two scenarios capture contacts that are specific to school attendence status. The result should be interpreted with caution when the number for children who went to school were very low. The latter two scenarios are specific to the data collection periods of Wave C1 and Wave C2. 
+
+<br/>
 
 ### Timeline
 
-The CoMix survey in `r country_name_` has had `r length(unique(part$wave))` waves of data collection covering from the period `r format(min(part$survey_date), "%d of %B %Y")` to `r format(max(part$survey_date), "%d of %B %Y")`. Figure 1 shows survey response by date.
+The CoMix survey in `r country_name_` has had `r length(unique(part$wave_id))` waves of data collection covering the period between `r format(min(part$survey_date), "%d %B %Y")` and `r format(max(part$survey_date), "%d %B %Y")`. Figure 1 shows survey response by date
 
 ```{r timetable, fig.cap="Table 1: Timeline of survey rounds"}
 
 timetable <- part %>% group_by(wave_id) %>% 
-  summarize(min_date = format(min(survey_date), "%d %b %y"), 
-            max_date = format(max(survey_date), "%d %b %y"), 
+  summarize(sample = str_to_sentence(unique(sample_type)), 
+            min_date = format(min(survey_date), "%d %b %Y"), 
+            max_date = format(max(survey_date), "%d %b %Y"), 
             participants = n()) %>% 
   ungroup()
 
@@ -87,10 +104,12 @@ count_contacts <- contacts %>% count(wave_id, name = "contacts")
 
 timetable <- left_join(timetable, count_contacts)
 
-names(timetable) <- c("Wave","Start date","End date", "Participants", "Contacts")
+timetable$sample = ifelse(timetable$sample=="Adult", "Adults", "Children")
+
+names(timetable) <- c("Wave","Sample type", "Start date","End date", "Participants", "Contacts")
 
 kable(t(timetable)) %>% 
-  kable_styling(full_width = F, position = "left")
+  kable_styling(full_width = F, position = "left", font_size = 12)
 
 ```
 <strong>Table 1. Survey wave summary.</strong> Survey wave start and end dates, number of participants, and number of contacts.
@@ -99,65 +118,64 @@ kable(t(timetable)) %>%
 
 <strong>Figure 1: Survey responses by date.</strong>
 
-```{r response_day_participants, fig.height=4, fig.width=6}
-
+```{r response_day_participantsbl, fig.height=4, fig.width=10}
 obs_per_date <- part %>% 
-  count(wave_id, survey_date) %>%
-  mutate(survey_date)
+  count(wave_id, survey_date, went_to_school) %>%
+  mutate(survey_date) %>% 
+  mutate(went_to_school)
 
 ggplot(obs_per_date) +
-  geom_col(aes(y = n, x = survey_date)) +
-  facet_grid(. ~ wave_id, scales = "free_x", space = "free_x") +
-  scale_x_date(breaks = "2 day", 
-               expand = expansion(0), 
-               date_labels = "%d %b %y") +
-  labs(y = "Number of participants", x = "Date of contact") + 
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.3)) 
-
+    geom_col(aes(y = n, x = survey_date, 
+                 fill = factor(went_to_school, levels = c("Yes", "No", "NA")))) +
+    scale_fill_discrete(name = "School attendance of children \non the day before survey", 
+                      labels = c("NA/Missing", "No", "Yes"),
+                      breaks = c("NA", "No", "Yes")) +
+    geom_col(data=obs_per_date %>%  filter(!wave_id %in% c("C1", "C2")), 
+             aes(y = n, x = survey_date), fill = "#c77cff") +
+    facet_grid(. ~ wave_id, scales = "free_x", space = "free_x") +
+    scale_x_date(breaks = "2 day", 
+                 expand = expansion(0), 
+                 date_labels = "%d %b %y") +
+    labs(y = "Number of participants", x = "Date of contact") + 
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.3)) 
 
 
 ```
 
-
 <br/>
 
 ### Participant demographics
-
-<br/>
-
 ```{r participant_table, echo=FALSE}
 
 part_summary_age <- part %>%
+  mutate(wave_id = as.character(wave_id)) %>% 
   count(wave_id, part_age_group) %>%
   group_by(wave_id) %>%
   mutate(prop = prop.table(n), 3) %>%
   mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = ""))
-
+  
 part_summary_gender <- part %>%
+  mutate(wave_id = as.character(wave_id)) %>% 
   count(wave_id, part_gender) %>%
   group_by(wave_id) %>%
   mutate(prop = round(prop.table(n), 3)) %>%
   mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = ""))
 
 part_summary_hh_size <- part %>% 
+  mutate(wave_id = as.character(wave_id)) %>% 
   count(wave_id, hh_size_group) %>%
   group_by(wave_id) %>%
   mutate(prop = round(prop.table(n), 3)) %>%
   mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = ""))
 
-# part_summary_pop_dens <- part %>%
-#   count(wave_id, popul) %>%
-#   group_by(wave_id) %>%
-#   mutate(prop = round(prop.table(n), 3)) %>%
-#   mutate(display = paste(n, " (", (prop * 100), "%)", sep = ""))
-
-
 part_summary_display_age <- part_summary_age %>% 
   pivot_wider(id_cols = "part_age_group", names_from = "wave_id", values_from = "display", names_prefix = "Wave ") %>% 
   rename(Group = part_age_group) %>%
   mutate(Category = "Age") %>%
-  arrange(Group)
+  arrange(Group) %>% 
+  mutate(Group = as.character(Group)) %>% 
+  mutate(Group = ifelse(is.na(Group), "NA/Other/Missing", Group))
 
 part_summary_display_gender <- part_summary_gender %>%
   pivot_wider(id_cols = "part_gender", names_from = "wave_id", values_from = "display", names_prefix = "Wave ") %>%
@@ -166,17 +184,18 @@ part_summary_display_gender <- part_summary_gender %>%
          Group = case_when(
            Group == "female" ~ "Female",
            Group == "male" ~ "Male",
-           is.na(Group) ~ "Other or Missing"
+           is.na(Group) ~ "NA/Other/Missing"
          ))
-
 
 part_summary_display_hh_size <- part_summary_hh_size %>% 
   pivot_wider(id_cols = "hh_size_group", names_from = "wave_id", values_from = "display", names_prefix = "Wave ") %>% 
   rename(Group = hh_size_group) %>%
-  mutate(Category = "Household size")
+  mutate(Category = "Household size") %>% 
+  mutate(Group = ifelse(is.na(Group), "NA/Other/Missing", Group))
 
 
 all_summary <- part %>%
+  mutate(wave_id = as.character(wave_id)) %>% 
   count(wave_id) %>% mutate(Category = "All") %>%
   rename(display = n) %>%
   pivot_wider(id_cols = "Category", names_from = "wave_id", values_from = "display", names_prefix = "Wave ")
@@ -191,7 +210,7 @@ full_summary <- rbindlist(list(
 full_summary[is.na(Group)]$Group <- ""
 
 kable(full_summary) %>% 
-  kable_styling(full_width = F, position = "left") %>%
+  kable_styling(full_width = F, position = "left", font_size = 12) %>%
   collapse_rows(columns = 1, valign = "top")
 
 # FOR WORD TABLES
@@ -202,52 +221,171 @@ kable(full_summary) %>%
 
 <br/>
 
+### Children sample school attendance
+```{r child_school_attend_table, echo=FALSE}
+child_sch_attendance <- part %>% filter(panel %in% c("C","D") & !is.na(part_age_group)) %>% 
+  mutate(part_attend_school_yesterday = ifelse(is.na(part_attend_school_yesterday), "NA", part_attend_school_yesterday)) %>% 
+  mutate(part_attend_school_yesterday = ifelse(part_attend_school_yesterday == "Prefer not to answer", "NA", part_attend_school_yesterday)) %>%
+  mutate(part_attend_school_yesterday = ifelse(part_attend_school_yesterday == "Don’t know", "NA", part_attend_school_yesterday)) %>% 
+  mutate(part_attend_school_yesterday = ifelse(part_attend_school_yesterday == "NA", "NA/Missing", part_attend_school_yesterday))
+
+school_table <- child_sch_attendance %>% 
+  group_by(wave_id, part_age_group) %>% 
+  count(part_attend_school_yesterday) %>% 
+  mutate(prop = prop.table(n), 3) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = ""))
+
+school_table_no <- child_sch_attendance %>% 
+  group_by(wave_id, part_age_group) %>% 
+  count(went_to_school) %>% 
+  mutate(prop = prop.table(n), 3) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = "")) %>% 
+  filter(went_to_school == "No") %>% 
+  rename(part_attend_school_yesterady = went_to_school) 
+  
+school_table <- rbindlist(list(school_table, school_table_no)) %>% 
+  arrange(wave_id, part_age_group, part_attend_school_yesterday)
+
+school_table_display <- school_table %>% 
+  pivot_wider(id_cols = c("wave_id","part_attend_school_yesterday"), names_from = "part_age_group", values_from = "display", names_prefix = "Age ") %>% 
+  pivot_wider(id_cols = "part_attend_school_yesterday", names_from = "wave_id", values_from = c("Age 0-4", "Age 5-17"), names_prefix = "Wave ")
+
+school_all_table <- child_sch_attendance %>% 
+  group_by(wave_id) %>% 
+  count(part_attend_school_yesterday) %>% 
+  mutate(prop = prop.table(n), 3) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = ""))
+
+school_all_table_no <- child_sch_attendance %>% 
+  group_by(wave_id) %>% 
+  count(went_to_school) %>% 
+  mutate(prop = prop.table(n), 3) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = "")) %>% 
+  filter(went_to_school == "No") %>% 
+  rename(part_attend_school_yesterady = went_to_school) 
+
+school_all_table <- rbindlist(list(school_all_table, school_all_table_no)) %>% 
+  arrange(wave_id, part_attend_school_yesterday)
+    
+school_all_table_display <- school_all_table %>% 
+  pivot_wider(id_cols = c("wave_id","part_attend_school_yesterday"), names_from = "wave_id", values_from = "display", names_prefix = "Age ") 
+
+school_merge_table_display <- merge(school_all_table_display, school_table_display,
+                                    by = "part_attend_school_yesterday") %>% 
+  relocate(c("Age C2", "Age 0-4_Wave C2", "Age 5-17_Wave C2"), .after = "Age 5-17_Wave C1")
+
+names(school_merge_table_display) <- c("School attendance",
+                                 "(0-17y)", "(0-4y)","(5-17y)",
+                                 "(0-17y)", "(0-4y)","(5-17y)")
+
+kable(school_merge_table_display) %>% 
+  kable_styling(full_width = F, position = "left", font_size = 12) %>% 
+  add_header_above(c(" "=1, "Wave C1, by age" = 3, "Wave C2, by age" = 3)) %>% 
+  row_spec(which(school_table_display$part_attend_school_yesterday=="No"), bold = T) %>%
+  row_spec(which(school_table_display$part_attend_school_yesterday=="Yes"), bold = T) %>%
+  row_spec(which(school_table_display$part_attend_school_yesterday=="NA/Missing"), bold = T)
+```
+
+<strong> Table 3. School attendance of children on the day before survey by age </strong>
+
+<br/>
+
 ### Contact characteristics
-
-<br/>
-
 #### Contact setting
+<strong>Figure 2. Proportion of contacts by setting and wave.</strong> <br>
+A. All contacts (both individually-reported and reported in aggregated contact questions); <br>
+B. individually-reported contacts only.
 
-<br/>
-
-<strong>Figure 2. Proportion of contacts by setting and wave.</strong> A) All contacts (both individually-reported and reported in aggregated contact questions); B) individually-reported contacts only.
-
-```{r contact_setting, echo = FALSE, fig.width = 7, fig.height = 4}
+```{r contact_setting, echo = FALSE, fig.width = 12, fig.height = 5}
+contacts <- contacts %>% 
+  mutate(barw = case_when(panel %in% c("A","B") ~ 3, panel %in% c("C", "D") ~ 1))
 
 setting_all <- ggplot(
-  contacts, 
-  aes(y = factor(wave_id), fill = factor(cnt_setting))) + 
+  contacts %>% filter(panel %in% c("A","B")), 
+  aes(y = as.character(wave_id), fill = factor(cnt_setting))) + 
   geom_bar(position="fill", stat="count") +
-  ylab("Wave") +
+  ylab("") +
   xlab("Proportion") +
   labs(fill = "Contact setting") +
+  scale_y_discrete(expand = c(0,0)) + scale_x_continuous(expand = c(0,0)) +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
   ggtitle("A. All contacts") +
   theme_bw() +
-  theme(plot.title = element_text(size=12)) 
+  theme(axis.ticks.x = element_blank(),
+        plot.background = element_blank(), 
+        legend.position = "none",
+        text = element_text(size=15))
 
-# total_time_all
-
-
-setting_individual <- ggplot(
-  contacts %>% filter(cnt_mass == "individual"), 
-  aes(y = factor(wave_id), fill = factor(cnt_setting))) + 
+setting_all_sch <- ggplot(
+  contacts %>% filter(panel %in% c("C","D") & went_to_school!="NA"), 
+  aes(y = wave_sch_id, fill = factor(cnt_setting))) + 
   geom_bar(position="fill", stat="count") +
-  ylab("Wave") +
+  ggtitle("(Did child attend school yesterday?)") +
+  ylab("") +
   xlab("Proportion") +
   labs(fill = "Contact setting") +
+  scale_y_discrete(expand = c(0,0)) + scale_x_continuous(expand = c(0,0)) +
   coord_flip() +
-  ggtitle("B. Individually-reported contacts") +
+  # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
   theme_bw() +
-  theme(plot.title = element_text(size=12))
+  theme(plot.title = element_text(size=15, hjust = 0.5),
+        strip.background = element_blank(), 
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        axis.title.y = element_blank(),
+        text = element_text(size=15))
 
-# total_time_non_household 
+wave_num_A <- nrow(distinct((contacts %>% filter(panel %in% c("A","B")) %>% select(wave_id))))
+grid.arrange(setting_all, setting_all_sch, ncol=2, widths=c(wave_num_A,5))
 
-comb_setting <- (setting_all + setting_individual) + plot_layout(guides = "collect") 
-comb_setting
+setting_individual <- ggplot(
+  contacts %>% filter(panel %in% c("A","B") & cnt_mass == "individual"), 
+  aes(y = as.character(wave_id), fill = factor(cnt_setting))) + 
+  geom_bar(position="fill", stat="count") +
+  ylab("") +
+  xlab("Proportion") +
+  labs(fill = "Contact setting") +
+  scale_y_discrete(expand = c(0,0)) + scale_x_continuous(expand = c(0,0)) +
+  coord_flip() +
+  # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
+  ggtitle("B. Individuall-reported contacts") +
+  theme_bw() +
+  theme(axis.ticks.x = element_blank(),
+        plot.background = element_blank(), 
+        legend.position = "none",
+        text = element_text(size=15))
+
+# total_time_all
+setting_individual_sch <- ggplot(
+  contacts %>% filter(panel %in% c("C","D") & went_to_school!="NA" & cnt_mass == "individual"),   
+  aes(y = wave_sch_id, fill = factor(cnt_setting))) + 
+  geom_bar(position="fill", stat="count") +
+  ggtitle("(Did child attend school yesterday?)") +
+  ylab("") +
+  xlab("Proportion") +
+  labs(fill = "Contact setting") +
+  scale_y_discrete(expand = c(0,0)) + scale_x_continuous(expand = c(0,0)) +
+  coord_flip() +
+  # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
+  theme_bw() +
+  theme(plot.title = element_text(size=15, hjust = 0.5),
+        strip.background = element_blank(), 
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        axis.title.y = element_blank(),
+        text = element_text(size=15))
+
+grid.arrange(setting_individual, setting_individual_sch, ncol=2, widths=c(wave_num_A,5))
+
+# comb_setting <- (setting_all + setting_all_sch + 
+#                  setting_individual + setting_individual_sch) + plot_layout(guides = "collect") 
+# comb_setting
 
 cnt_summary_setting <- contacts %>%
+  filter(panel %in% c("A","B")) %>% 
   count(wave_id, cnt_setting) %>%
   group_by(wave_id) %>%
   mutate(prop = round(prop.table(n), 3)) %>%
@@ -257,6 +395,20 @@ cnt_summary_setting <- contacts %>%
   mutate(Category = "Contact setting") %>%
   relocate(Category, .before = Group)
 
+cnt_summary_setting_sch <- contacts %>%
+  filter(panel %in% c("C","D") & went_to_school!="NA") %>% 
+  count(wave_sch_id, cnt_setting) %>%
+  group_by(wave_sch_id) %>%
+  mutate(prop = round(prop.table(n), 3)) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = "")) %>%
+  pivot_wider(id_cols = "cnt_setting", names_from = "wave_sch_id", values_from = "display", names_prefix = "Wave ")  %>%
+  rename("Group" = cnt_setting) %>%
+  mutate(Category = "Contact setting") %>%
+  relocate(Category, .before = Group)
+
+cnt_summary_setting <- merge(cnt_summary_setting, cnt_summary_setting_sch, 
+                             by = c("Category", "Group"))
+
 # kable(cnt_summary_setting)  %>% kable_styling(full_width = F, position = "left")
 
 ```
@@ -264,50 +416,98 @@ cnt_summary_setting <- contacts %>%
 <br/>
 
 #### Contact duration
+<strong>Figure 3. Proportion of contacts by duration of contact and wave.</strong> <br>
+A. All individually-reported contacts; <br>
+B. individually-reported contacts, excluding the participant's household members.
 
-<br/>
-
-<strong>Figure 3. Proportion of contacts by duration of contact and wave.</strong> A) All individually-reported contacts; B) individually-reported contacts, excluding the participant's household members.
-
-```{r contact_duration, echo = FALSE, fig.width = 7, fig.height = 4}
+```{r contact_duration, echo = FALSE, fig.width = 12, fig.height = 5}
 
 total_time_all <- ggplot(
-  contacts %>% filter(cnt_mass == "individual"), 
-  aes(y = factor(wave_id), fill = factor(cnt_total_time))) + 
+  contacts %>% filter(cnt_mass == "individual") %>% filter(panel %in% c("A","B")), 
+  aes(y = as.character(wave_id), fill = factor(cnt_total_time))) + 
   geom_bar(position="fill", stat="count") +
-  ylab("Wave") +
+  ylab("") +
   xlab("Proportion") +
   labs(fill = "Contact time") +
+  scale_y_discrete(expand = c(0,0)) + scale_x_continuous(expand = c(0,0)) +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
   ggtitle("A. Individual contacts") +
   theme_bw() +
-  theme(plot.title = element_text(size=12))
+  theme(axis.ticks.x = element_blank(),
+          plot.background = element_blank(), 
+          legend.position = "none",
+          text = element_text(size=15))
 
-# total_time_all
+total_time_all_sch <- ggplot(
+  contacts %>% 
+    filter(cnt_mass == "individual") %>% 
+    filter(panel %in% c("C","D") & went_to_school!="NA"), 
+  aes(y = wave_sch_id, fill = factor(cnt_total_time))) + 
+  geom_bar(position="fill", stat="count") +
+  ylab("") +
+  xlab("Proportion") +
+  labs(fill = "Contact time") +
+  scale_y_discrete(expand = c(0,0)) + scale_x_continuous(expand = c(0,0)) +
+  coord_flip() +
+  # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
+  ggtitle("(Did child attend school yesterday?") +
+  theme_bw() +
+    theme(plot.title = element_text(size=15, hjust = 0.5),
+          strip.background = element_blank(), 
+          axis.ticks.x = element_blank(),
+          axis.text.y = element_blank(), 
+          axis.ticks.y = element_blank(), 
+          axis.title.y = element_blank(),
+          text = element_text(size=15))
+
+wave_num_A <- nrow(distinct((contacts %>% filter(panel %in% c("A","B")) %>% select(wave_id))))
+grid.arrange(total_time_all, total_time_all_sch, ncol=2, widths=c(wave_num_A,5))
 
 
 total_time_non_household <- ggplot(
-  contacts %>% filter(cnt_mass == "individual" & cnt_household == 0), 
-  aes(y = factor(wave_id), fill = factor(cnt_total_time))) + 
+  contacts %>% filter(cnt_mass == "individual" & cnt_household == 0) %>% filter(panel %in% c("A","B")), 
+  aes(y = as.character(wave_id), fill = factor(cnt_total_time))) + 
   geom_bar(position="fill", stat="count") +
-  ylab("Wave") +
+  ylab("") +
   xlab("Proportion") +
   labs(fill = "Contact time") +
+  scale_y_discrete(expand = c(0,0)) + scale_x_continuous(expand = c(0,0)) +
   coord_flip() +
   # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
   ggtitle("B. Non-household contacts") +
   theme_bw() +
-  theme(plot.title = element_text(size=12))
+  theme(axis.ticks.x = element_blank(),
+          plot.background = element_blank(), 
+          legend.position = "none",
+          text = element_text(size=15))
 
-# total_time_non_household 
+total_time_non_household_sch <- ggplot(
+  contacts %>% 
+    filter(cnt_mass == "individual" & cnt_household == 0) %>% 
+    filter(panel %in% c("C","D") & went_to_school!="NA"), 
+  aes(y = wave_sch_id, fill = factor(cnt_total_time))) + 
+  geom_bar(position="fill", stat="count") +
+  ylab("") +
+  xlab("Proportion") +
+  ggtitle("(Did child attend school yesterday?") +
+  labs(fill = "Contact time") +
+  scale_y_discrete(expand = c(0,0)) + scale_x_continuous(expand = c(0,0)) +
+  coord_flip() +
+  # scale_fill_manual(values = rev(fresh_pallette[c(2:6,8)]), guide = guide_legend(reverse = TRUE)) +
+  theme_bw() +
+  theme(plot.title = element_text(size=15, hjust = 0.5),
+          strip.background = element_blank(), 
+          axis.ticks.x = element_blank(),
+          axis.text.y = element_blank(), 
+          axis.ticks.y = element_blank(), 
+          axis.title.y = element_blank(),
+          text = element_text(size=15))
 
-comb_total_time <- (total_time_all + total_time_non_household) + plot_layout(guides = "collect")
-
-comb_total_time 
-
+grid.arrange(total_time_non_household, total_time_non_household_sch, ncol=2, widths=c(wave_num_A,5))
 
 cnt_summary_duration <- contacts %>%
+  filter(panel %in% c("A","B")) %>% 
   filter(cnt_mass == "individual") %>%
   count(wave_id, cnt_total_time) %>%
   group_by(wave_id) %>%
@@ -317,6 +517,21 @@ cnt_summary_duration <- contacts %>%
   rename("Group" = cnt_total_time) %>%
   mutate(Category = "Contact time") %>%
   relocate(Category, .before = Group)
+
+cnt_summary_duration_sch <- contacts %>%
+  filter(panel %in% c("C","D") & went_to_school!="NA") %>% 
+  filter(cnt_mass == "individual") %>%
+  count(wave_sch_id, cnt_total_time) %>%
+  group_by(wave_sch_id) %>%
+  mutate(prop = round(prop.table(n), 3)) %>%
+  mutate(display = paste(n, " (", format_n(prop * 100), "%)", sep = "")) %>%
+  pivot_wider(id_cols = "cnt_total_time", names_from = "wave_sch_id", values_from = "display", names_prefix = "Wave ")  %>%
+  rename("Group" = cnt_total_time) %>%
+  mutate(Category = "Contact time") %>%
+  relocate(Category, .before = Group)
+
+cnt_summary_duration <- merge(cnt_summary_duration, cnt_summary_duration_sch, 
+                              by = c("Category", "Group")) 
 # kable(cnt_summary_duration)  %>% kable_styling(full_width = F, position = "left")
 
 ```
@@ -326,116 +541,158 @@ cnt_summary_duration <- contacts %>%
 ```{r cnt_summary_table, echo = FALSE}
 cnt_summary_table <- rbindlist(list(cnt_summary_setting, cnt_summary_duration))
 
+header1 <- c(" "=ncol(cnt_summary_table)-4, "Did child attend school yesterday?"=4)
+
 kable(cnt_summary_table) %>% 
-  kable_styling(full_width = F, position = "left") %>%
-  collapse_rows(columns = 1, valign = "top")
+  kable_styling(full_width = F, position = "left", font_size = 12) %>%
+  collapse_rows(columns = 1, valign = "top") %>% 
+  add_header_above(header1) 
+  
+  
 ```
 
-<strong>Table 3. Contacts by setting and duration of contact and wave.</strong> Number and percentage of contacts by category for all contacts (individually-reported and reported in aggregated contact questions).
+<strong>Table 4. Contacts by setting and duration of contact and wave.</strong> Number and percentage of contacts by category for all contacts (individually-reported and reported in aggregated contact questions).
 
 <br/>
 
 #### Contact means
-
-<br/>
-
 <strong>Figure 4. Crude mean contacts by participant age group and wave.</strong>   Reported by all contacts and contacts truncated to 50 per participant per day.
 
-```{r contact_means_plot, echo=FALSE, message = FALSE, warning = FALSE}
-wave_levels <- levels(unique(arrange(part_contacts, survey_round)$wave_id))
-
+```{r contact_means_plot, echo=FALSE, message = FALSE, warning = FALSE, fig.width = 14, fig.height = 8}
+wave_levels <- levels(unique(arrange(part_contacts %>% filter(panel!="D"), survey_round)$wave_id))
 
 all_mean <- part_contacts %>% 
   group_by(wave_id, part_id) %>%
   summarize(n = sum(cnt_any, na.rm = T)) %>%
   group_by(wave_id) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "All", "Participant age" = "All") 
+  mutate(Contacts = "All contacts", "Participant age" = "All") %>% 
+  mutate(went_to_school = "All") %>% 
+  relocate("Participant age", .after = went_to_school) 
 
+all_mean_sch <- part_contacts %>% 
+  filter(panel %in% c("C","D")) %>% 
+  filter(went_to_school %in% c("Yes", "No")) %>% 
+  filter(!is.na(part_age_group)) %>% 
+  group_by(wave_id, went_to_school, part_id) %>%
+  summarize(n = sum(cnt_any, na.rm = T)) %>%
+  group_by(wave_id, went_to_school) %>%
+  summarise("Mean contacts" = mean(n)) %>%
+  mutate(Contacts = "All contacts", "Participant age" = "All") %>% 
+  relocate("Participant age", .after = went_to_school)
 
 trunc_mean <- trunc_part_contacts %>% 
   group_by(wave_id, part_id) %>%
   summarize(n = sum(cnt_any, na.rm = T)) %>%
   summarise("Mean contacts" = mean(n)) %>%
-  mutate(Contacts = "Truncated to 50 contacts per participant", "Participant age" = "All") 
+  mutate(Contacts = "Truncated to 50 contacts/participant", "Participant age" = "All") %>% 
+  mutate(went_to_school = "All") %>% 
+  relocate("Participant age", .after = went_to_school)
 
-
+trunc_mean_sch <- trunc_part_contacts %>% 
+  filter(panel %in% c("C","D")) %>% 
+  filter(went_to_school %in% c("Yes", "No")) %>% 
+  filter(!is.na(part_age_group)) %>% 
+  group_by(wave_id, went_to_school, part_id) %>%
+  summarize(n = sum(cnt_any, na.rm = T)) %>%
+  summarise("Mean contacts" = mean(n)) %>%
+  mutate(Contacts = "Truncated to 50 contacts/participant", "Participant age" = "All") %>% 
+  relocate("Participant age", .after = went_to_school)
 
 all_mean_age <- part_contacts %>% 
+  filter(!is.na(part_age_group)) %>% 
   group_by(wave_id, part_id, part_age_group) %>%
   summarize(n = sum(cnt_any, na.rm = T)) %>%
   group_by(wave_id, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
   mutate(Contacts = "All contacts") %>% 
-  rename("Participant age" = part_age_group)
+  rename("Participant age" = part_age_group) %>% 
+  mutate(went_to_school = "All") 
+
+all_mean_age_sch <- part_contacts %>% 
+  filter(panel %in% c("C","D")) %>% 
+  filter(went_to_school %in% c("Yes", "No")) %>% 
+  filter(!is.na(part_age_group)) %>% 
+  group_by(wave_id, went_to_school, part_id, part_age_group) %>%
+  summarize(n = sum(cnt_any, na.rm = T)) %>%
+  group_by(wave_id, went_to_school, part_age_group) %>%
+  summarise("Mean contacts" = mean(n)) %>%
+  mutate(Contacts = "All contacts") %>% 
+  rename("Participant age" = part_age_group) 
 
 trunc_mean_age <- trunc_part_contacts %>% 
+  filter(!is.na(part_age_group)) %>% 
   group_by(wave_id, part_id, part_age_group) %>%
   summarize(n = sum(cnt_any, na.rm = T)) %>%
   group_by(wave_id, part_age_group) %>%
   summarise("Mean contacts" = mean(n)) %>%
   mutate(Contacts = "Truncated to 50 contacts/participant") %>% 
+  rename("Participant age" = part_age_group) %>% 
+  mutate(went_to_school = "All") 
+
+trunc_mean_age_sch <- trunc_part_contacts %>% 
+  filter(panel %in% c("C","D")) %>% 
+  filter(went_to_school %in% c("Yes", "No")) %>% 
+  filter(!is.na(part_age_group)) %>% 
+  group_by(wave_id, went_to_school, part_id, part_age_group) %>%
+  summarize(n = sum(cnt_any, na.rm = T)) %>%
+  group_by(wave_id, went_to_school, part_age_group) %>%
+  summarise("Mean contacts" = mean(n)) %>%
+  mutate(Contacts = "Truncated to 50 contacts/participant") %>% 
   rename("Participant age" = part_age_group) 
 
-contact_means <- rbindlist(list(all_mean, trunc_mean, all_mean_age, trunc_mean_age), use.names = T) %>%
+contact_means <- rbindlist(list(all_mean, all_mean_sch,
+                                trunc_mean, trunc_mean_sch,
+                                all_mean_age, all_mean_age_sch, 
+                                trunc_mean_age, trunc_mean_age_sch), use.names = T) %>%
   rename(Wave = wave_id) %>%
   mutate("Mean contacts"= round(`Mean contacts`, 2)) %>%
-  select("Wave", "Contacts", "Participant age", "Mean contacts") 
+  select("Wave", "Contacts", "Participant age", "Mean contacts", "went_to_school") 
 
+contact_means <- contact_means %>% filter(Wave != "D1")
 
 contact_means_table <- contact_means %>%
-  pivot_wider(id_cols = c("Contacts", "Participant age"), 
-              names_from = "Wave", 
+  mutate(went_to_school = ifelse(!Wave %in% c("C1", "C2"), "", went_to_school)) %>% 
+  pivot_wider(id_cols = c("Contacts",`Participant age`), 
+              names_from = c("Wave", "went_to_school"),
               values_from = "Mean contacts", 
               names_prefix = "Wave ") %>%
-  select(Contacts, "Participant age", paste("Wave", wave_levels))
+  arrange(Contacts, `Participant age`) %>% 
+  rename_all(funs(stringr::str_replace_all(., '\\_', ' ')))
 
+contact_means_table <- contact_means_table %>% 
+  rename_all(funs(stringr::str_replace_all(., 'Wave C1', 'Wave C1:'))) %>% 
+  rename_all(funs(stringr::str_replace_all(., 'Wave C2', 'Wave C2:'))) %>% 
+  relocate(c("Wave C1: All", "Wave C1: Yes", "Wave C1: No", 
+             "Wave C2: All", "Wave C2: Yes", "Wave C2: No", )
+           , .after = last_col())
+  
 contact_means_ages <- contact_means %>% filter(`Participant age` != "All") %>%  
   mutate(age_panel = case_when(
-    `Participant age` %in% c("0-4", "5-17") ~ "Children",
+    `Participant age` %in% c("0-4") ~ "Younger children",
+    `Participant age` %in% c("5-17", "5-11", "12-17") ~ "Older children",
     `Participant age` %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
-    `Participant age` %in% c("60-69", "70+") ~ "Older adults"
+    `Participant age` %in% c("60-69", "70+", "60+") ~ "Older adults"
   )) %>%
-  mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
+  mutate(age_panel = factor(age_panel, levels = c("Adults", "Older adults", "Younger children", "Older children"))) %>%
   mutate(Wave = factor(paste("Wave", Wave), levels = paste("Wave", wave_levels)))
   
- 
-
-# ggplot(contact_means_ages, aes(x = `Participant age`, y = `Mean contacts`,
-#                                fill = `Participant age`)) +
-#   geom_col(position = "dodge") +
-#   xlab("Partcipant age") +
-#   facet_grid(rows = vars(Contacts), cols = vars(factor(Wave))) +
-#   theme_bw() +
-#   ylab("Mean number of contacts") +
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
-# contact_means_ages %>% filter(Contacts == "Truncated to 50 contacts/participant")
-
-ggplot(contact_means_ages, aes(x = factor(Wave), y = `Mean contacts`)) +
-  geom_line(aes(group = factor(`Participant age`), color = factor(`Participant age`)), alpha = 0.7) +
-  geom_point(aes(group = factor(`Participant age`), color = factor(`Participant age`)), alpha = 0.8) +
-  facet_grid(rows = vars(Contacts), cols = vars(age_panel), scales = "free_y") +
+ggplot(contact_means_ages, 
+       aes(x = factor(Wave), y = `Mean contacts`, 
+           group=interaction(factor(`Participant age`), went_to_school),
+           color=interaction(factor(`Participant age`)))) +
+  geom_line(aes(linetype = went_to_school), size=1.25, alpha = 0.7) +
+  scale_linetype_manual(name = "Did child \nattend school yesterday?", values=c("solid", "dashed", "dotted"))+
+  geom_point(alpha = 0.8) + 
+  facet_nested_wrap(Contacts ~ age_panel, nrow=2,scales = "free") +
   expand_limits(y = 0) +
   scale_color_gdocs() +
   xlab("Wave") +
   ylab("Mean number of contacts") +
   labs(color = "Participant age") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
-
-
-# ggplot(contact_means_ages, aes(x = Wave, y = `Mean contacts`,
-#                                fill = `Participant age`)) +
-#   geom_col(position = "dodge") +
-#   facet_grid(cols = vars(Contacts), rows = vars(`Participant age`), scales = "free") +
-#   # theme_bw() +
-#   expand_limits(y = 0) +
-#   scale_color_few() +
-#   xlab("Wave") +
-#   ylab("Mean number of contacts") +
-#   labs(color = "Participant age") +
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3)) +
-#   theme_bw()
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3),
+        text = element_text(size=18))
 
 
 
@@ -444,27 +701,25 @@ ggplot(contact_means_ages, aes(x = factor(Wave), y = `Mean contacts`)) +
 <br/>
 
 ```{r contact_means_table}
+header1 <- c(" "=ncol(contact_means_table)-6, "Did child attend school yesterday?"=6)
+
 kable(contact_means_table) %>%
-  kable_styling(full_width = F, position = "left") %>%
-  collapse_rows(columns = 1, valign = "top")
+  kable_styling(full_width = F, position = "left") %>% 
+  collapse_rows(columns = 1:2, valign = "top") %>% 
+  add_header_above(header1, bold = TRUE)
+
 ```
-<strong>Table 4. Crude mean contacts by participant age group for each wave.</strong>
+<strong>Table 5. Crude mean contacts by participant age group for each wave.</strong> Children data is disaggregated by school attendance status. 
 
 <br/>
 
 ### Contact Matrices
-
-<br/>
-
 #### All contacts
-
-<br/>
-
 <strong>Figure 5. Contact matrices by wave.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
 ```{r contact_matrices, echo=FALSE}
 # Plot generated in `r/socialmixr_matrices.R`
-source(file.path(here::here(), "r", "socialmixr_matrices.R"))
+source(file.path(here::here(), "r", "socialmixr_matrices_c2.R"))
 
 cm_plot_all
 ```
@@ -473,7 +728,7 @@ cm_plot_all
 
 <strong>Figure 6. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
-```{r adjusted_mean_figure, fig.height = 3, fig.width = 6}
+```{r adjusted_mean_figure, fig.height = 3, fig.width = 10}
 # 
 # ggplot(adj_mean_contacts_all, aes(y = mean_contacts, x = participant_age,
 #                               fill = participant_age)) +
@@ -488,61 +743,73 @@ cm_plot_all
 
 adj_mean_contacts_all <- adj_mean_contacts_all %>% 
   mutate(age_panel = case_when(
-    as.character(participant_age) %in% c("0-4", "5-11", "12-17") ~ "Children",
-    as.character(participant_age) %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
-    as.character(participant_age) %in% c("60-69", "70+") ~ "Older adults"
+    as.character(participant_age) %in% c("0-4") ~ "Younger children", 
+    as.character(participant_age) %in% c("5-17","5-11","12-17") ~ "Older children",
+    as.character(participant_age) %in% c("18-29","30-39", "40-49", "50-59") ~ "Adults",
+    as.character(participant_age) %in% c("60-69", "70+", "60+") ~ "Older adults"
   )) %>%
-   # mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
-  mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
-  mutate(panel = gsub("Wave|[0-9]", "", wave)) %>%
-  mutate(age_panel = as.character(age_panel))
+ mutate(age_panel = factor(age_panel, levels = c("Adults", "Older adults","Younger children", "Older children"))) %>%
+  mutate(Wave = factor(wave, levels = paste("Wave", wave_levels))) 
 
-ggplot(adj_mean_contacts_all %>% filter(wavef != "Wave C1" & age_panel != "Children"), aes(x = factor(wavef), y = mean_contacts)) +
-    geom_point(aes(group = factor(participant_age), color = factor(participant_age)), alpha = 0.8) +
-
-  geom_line(aes(group = participant_age, color = participant_age), alpha = 0.7)  +
-  facet_grid(rows = vars(age_panel)) +
+ggplot(adj_mean_contacts_all, 
+       aes(x = factor(wave), y = mean_contacts, group = factor(participant_age), color = factor(participant_age))) +
+  geom_line(size=1.25, alpha = 0.7)  +
+  geom_point(alpha = 0.8) +
+  facet_nested_wrap(. ~ age_panel, nrow=1, scales = "free") +
   expand_limits(y = 0) +
   scale_color_gdocs() +
   xlab("Wave") +
   ylab("Mean number of contacts") +
   labs(color = "Participant age") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3),
+        text = element_text(size=15))
+  
+
 
   
 ```
 
 <br/>
 
-<strong>Table 5. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
-
 ```{r adjusted_mean_table_all}
 kable(adj_mean_contacts_table_all, digits = 2) %>% kable_styling(full_width = F, position = "left")
 ```
+<strong>Table 6. Adjusted contact means by participant age group.</strong> Contacts truncated to 50 per participant per day, adjusted for day of week.
 
 
 <br/>
 
 
 #### Combined contacts
+<strong>Figure 7. Symmetric combined matrices by wave.</strong> Adult survey waves each combined with <br> 
+A. children who attended school, <br>
+B. children who did not attend school to provide an estimate of overall contacts, <br>
+C. Wave C1 (Wave C1 data collected between `r format(min(part[part$wave_id=="C1",]$survey_date), "%d %B %Y")` and `r format(max(part[part$wave_id=="C1",]$survey_date), "%d %B %Y")`), and <br>
+D. Wave C2 (Wave C2 data collected between `r format(min(part[part$wave_id=="C2",]$survey_date), "%d %B %Y")` and `r format(max(part[part$wave_id=="C2",]$survey_date), "%d %B %Y")`). <br>
+Sub-plots A and B are specific to the different contexts of school attendance, and sub-plots C and D are specific to the data collection periods of Wave C1 and Wave C2, respectively. <br>
+Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
 
-<br/>
-
-<strong>Figure 7. Symmetric combined matrices by wave.</strong> Adult survey waves each combined with the single round of data collection for children's contacts (wave C1) to provide an estimate of overall contacts. Children's contacts may have changed over time, especially depending on school attendence status. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
-
-```{r contact_matrices_adult, echo=FALSE}
+```{r contact_matrices_adult, echo=FALSE, fig.width = 18, fig.height = 18}
 # Plot generated in `r/socialmixr_matrices.R`
+cm_plot_adult <- ggarrange(cm_plot_adult_s3, cm_plot_adult_s4, 
+          cm_plot_adult_c1, cm_plot_adult_c2,
+          common.legend = TRUE, legend = "bottom", font.label = list(size = 20))
+annotate_figure(cm_plot_adult,
+                bottom = text_grob("NA and contacts <0.01 are shown in black", 
+                                   hjust=1, x=1, size=20))
 
-cm_plot_adult
 ```
 
 <br/>
 
 
-<strong>Figure 8. Combined contact means by wave.</strong> Contact means as calculated from symmetric, combined symmetric matrices. Adult survey waves each combined with the single round of data collection for children's contacts (wave C1) to provide an estimate of overall contacts. Children's contacts may have changed over time, especially depending on school attendence status. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
+<strong>Figure 8. Combined contact means by wave.</strong> Contact means as calculated from symmetric, combined symmetric matrices. Adult survey waves each combined with <br>
+A. children who attended school, and <br>
+B. children who did not attend school. <br>
+Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
 
-```{r adjusted_mean_figure_adult, fig.height = 3, fig.width = 6}
+```{r adjusted_mean_figure_adult, fig.height = 4, fig.width = 15}
 
 # ggplot(adj_mean_contacts_adult, aes(y = mean_contacts, x = participant_age,
 #                               fill = participant_age)) +
@@ -551,54 +818,55 @@ cm_plot_adult
 #   xlab("Participant age") +
 #   ylab("Mean contacts") +
 #   labs(fill = "Participant age") +
-#   theme_bw() +
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
-adj_mean_contacts_adult <- adj_mean_contacts_adult %>% 
+#   theme_bw() 
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))
+
+adj_mean_contacts_adult_s3 <- adj_mean_contacts_adult_s3 %>% 
   mutate(age_panel = case_when(
-    participant_age %in% c("0-4", "5-11", "12-17") ~ "Children",
+    participant_age %in% c("0-4") ~ "Younger children",
+    participant_age %in% c("0-4", "5-17") ~ "Older children",
     participant_age %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
-    participant_age %in% c("60-69", "70+") ~ "Older adults"
+    participant_age %in% c("60-69", "70+", "60+") ~ "Older adults"
   )) %>%
-   mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
+  mutate(age_panel = factor(age_panel, levels = c("Younger children", 
+                                                  "Older children",
+                                                  "Adults", "Older adults"))) %>%
   mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
-  mutate(panel = gsub("Wave|[0-9]", "", wave)) 
-
-# ggplot(adj_mean_contacts_adult, aes(x = factor(wavef), y = mean_contacts)) +
-#   geom_line(aes(group = factor(participant_age), color = factor(participant_age)), alpha = 0.7) +
-#   geom_point(aes(group = factor(participant_age), color = factor(participant_age)), alpha = 0.8) +
-#   facet_grid(rows = vars(panel), scales = "free_x") +
-#   expand_limits(y = 0) +
-#   scale_color_gdocs() +
-#   xlab("Wave") +
-#   ylab("Mean number of contacts") +
-#   labs(color = "Participant age") +
-#   theme_bw() +
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.3))  
-
-
-adj_mean_contacts_adult <- adj_mean_contacts_adult %>% 
-  mutate(age_panel = case_when(
-    as.character(participant_age) %in% c("0-4", "5-11", "12-17") ~ "Children",
-    as.character(participant_age) %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
-    as.character(participant_age) %in% c("60-69", "70+") ~ "Older adults"
-  )) %>%
-   # mutate(age_panel = factor(age_panel, levels = c("Children", "Adults", "Older adults"))) %>%
-  mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
-  mutate(panel = gsub("Wave|[0-9]", "", wave)) %>%
+  mutate(panel = gsub("Wave|[0-9]", "", wave)) %>% 
   mutate(age_panel = as.character(age_panel))
 
-ggplot(adj_mean_contacts_adult %>% filter(wavef != "Wave C1" & age_panel != "Children"), aes(x = factor(wavef), y = mean_contacts)) +
-    geom_point(aes(group = factor(participant_age), color = factor(participant_age)), alpha = 0.8) +
+adj_mean_contacts_adult_s4 <- adj_mean_contacts_adult_s4 %>% 
+  mutate(age_panel = case_when(
+    participant_age %in% c("0-4") ~ "Younger children",
+    participant_age %in% c("0-4", "5-17") ~ "Older children",
+    participant_age %in% c("18-29", "30-39", "40-49", "50-59") ~ "Adults",
+    participant_age %in% c("60-69", "70+", "60+") ~ "Older adults"
+  )) %>%
+  mutate(age_panel = factor(age_panel, levels = c("Younger children", 
+                                                  "Older children",
+                                                  "Adults", "Older adults"))) %>%
+  mutate(wavef = factor(wave, levels = paste("Wave", wave_levels))) %>%
+  mutate(panel = gsub("Wave|[0-9]", "", wave)) %>% 
+  mutate(age_panel = as.character(age_panel))
 
-  geom_line(aes(group = participant_age, color = participant_age), alpha = 0.7)  +
-  facet_grid(rows = vars(age_panel)) +
+adj_mean_contacts_adult_s3$from <- "s3"
+adj_mean_contacts_adult_s4$from <- "s4"
+
+adj_mean_contacts_adult <- rbind(adj_mean_contacts_adult_s3, adj_mean_contacts_adult_s4)
+
+ggplot(adj_mean_contacts_adult %>% filter(panel %in% c(" A", " B") & age_panel %in% c("Adults", "Older adults")),
+       aes(x = factor(wavef), y = mean_contacts, group = from, color = from)) +
+  geom_point(alpha = 0.8) +
+  geom_line(alpha = 0.8)  +
+  facet_grid(cols = vars(participant_age)) +
   expand_limits(y = 0) +
-  scale_color_gdocs() +
+  scale_color_gdocs(name = "Comnbined with children who", 
+                        labels=c("attended school", "did not attend school"))+
   xlab("Wave") +
   ylab("Mean number of contacts") +
-  labs(color = "Participant age") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.3))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3),
+        text = element_text(size=16)) 
 
 
 # ggthemr::ggthemr("grape")
@@ -621,16 +889,24 @@ ggplot(adj_mean_contacts_adult %>% filter(wavef != "Wave C1" & age_panel != "Chi
 
 <br/>
 
-<strong>Table 6.Participant contact means by wave.</strong> Contact means as calculated from symmetric, participant to contact symmetric matrices. Adult survey waves each combined with the single round of data collection for children's contacts (wave C1) to provide an estimate of overall contacts. Children's contacts may have changed over time, especially depending on school attendence status. Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
-
 ```{r adjusted_mean_table_adult}
-kable(adj_mean_contacts_table_adult, digits = 2) %>% kable_styling(full_width = F, position = "left")
+adj_mean_contacts_table_adult <- cbind(adj_mean_contacts_table_adult_s3, adj_mean_contacts_table_adult_s4[, -1])
+
+kable(adj_mean_contacts_table_adult, digits = 2) %>% 
+  kable_styling(full_width = F, position = "left") %>% 
+  add_header_above(c(" "=1, 
+                     "A. Combined with children who \nattended  school"=ncol(adj_mean_contacts_table_adult_s3)-1,
+                     "B. Combined with chlidren who \ndid not attend school"=ncol(adj_mean_contacts_table_adult_s4)-1))
 ```
+<strong>Table 7. Participant contact means by wave.</strong> Contact means as calculated from symmetric, participant to contact symmetric matrices. Adult survey waves each combined with <br>
+A. children who attended school, and <br>
+B. children who did not attend school. <br>
+Contacts truncated to 50 per participant per day, adjusted for day of week and country population by age using the World Population Prospect population data.
 
 
 <br/>
 
-#### References
+### References
 
 1.  Jarvis CI, Van Zandvoort K, Gimma A, Prem K, CMMID COVID-19 working group, Klepac P, et al. Quantifying the impact of physical distance measures on the transmission of COVID-19 in the UK. BMC Med. 2020;18: 124.
 
@@ -639,3 +915,4 @@ kable(adj_mean_contacts_table_adult, digits = 2) %>% kable_styling(full_width = 
 3. 	Mossong J, Hens N, Jit M, Beutels P, Auranen K, Mikolajczyk R, et al. Social contacts and mixing patterns relevant to the spread of infectious diseases. PLoS Med. 2008;5: e74. 
 
 4. Sebastian Funk (2020). socialmixr: Social Mixing Matrices for Infectious Disease Modelling. R package version 0.1.7.
+
