@@ -14,10 +14,9 @@ if (!exists("preset_variables")) preset_variables <- FALSE
 
 if (preset_variables == FALSE) {
   message("Setting data")
-  #country_name_ <- "Austria"
 
-  #path_to_data <- "data"
-  #path_to_data <- "C:/Users/kw/Filr/Net Folders/EPH Shared/Comix_survey/data/clean"
+  country_name_ <- # assign country name, eg "Poland"
+  path_to_data <- # assign path to data, eg file.path("data")
   truncate_contacts_n <- 50
   matrix_boots_n <- 1000
 }
@@ -61,10 +60,10 @@ map_eu_nations <- c(
   "ch" = "Switzerland",
   "fi" = "Finland",
   "si" = "Slovenia",
-  "sk" = "Slovakia",
-  "ee" = "Estonia",
   "hu" = "Hungary",
+  "sk" = "Slovakia",
   "hr" = "Croatia",
+  "ee" = "Estonia",
   "mt" = "Malta"
 )
 
